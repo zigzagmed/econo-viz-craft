@@ -1,17 +1,17 @@
 
 import React, { useState } from 'react';
 import { ChartHeader } from './charting/ChartHeader';
+import { ChartTypeSelectionCard } from './charting/ChartTypeSelectionCard';
 import { VariableSelectionCard } from './charting/VariableSelectionCard';
-import { ChartTypeCard } from './charting/ChartTypeCard';
 import { ChartDisplay } from './charting/ChartDisplay';
 import { useChartingData } from '../hooks/useChartingData';
 import { useChartConfig } from '../hooks/useChartConfig';
 import { useECharts } from '../hooks/useECharts';
 
 export const ChartingTool = () => {
-  const selectedDataset = 'gdp_growth'; // Default to GDP growth dataset
+  const selectedDataset = 'gdp_growth';
+  const [chartType, setChartType] = useState<string>('');
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
-  const [chartType, setChartType] = useState<string>('bar');
   const [customizationOpen, setCustomizationOpen] = useState(false);
 
   const { getVariableData, getDatasetInfo } = useChartingData();
@@ -30,7 +30,26 @@ export const ChartingTool = () => {
     return variable?.type || 'continuous';
   };
 
-  const canShowChart = selectedVariables.length > 0;
+  const getChartRequirements = (type: string) => {
+    const requirements = {
+      bar: { min: 1, max: 2, description: 'Choose 1-2 variables for comparison' },
+      line: { min: 2, max: 3, description: 'Choose 2-3 variables to show trends' },
+      pie: { min: 1, max: 1, description: 'Choose exactly 1 categorical variable' },
+      scatter: { min: 2, max: 2, description: 'Choose exactly 2 continuous variables' },
+      histogram: { min: 1, max: 1, description: 'Choose exactly 1 continuous variable' },
+      boxplot: { min: 1, max: 3, description: 'Choose 1-3 variables for distribution analysis' },
+      violin: { min: 1, max: 2, description: 'Choose 1-2 variables for distribution' },
+      density: { min: 1, max: 2, description: 'Choose 1-2 continuous variables' },
+      regression: { min: 2, max: 2, description: 'Choose exactly 2 continuous variables' },
+      correlation: { min: 2, max: 10, description: 'Choose 2-10 variables for correlation matrix' },
+      residual: { min: 2, max: 2, description: 'Choose exactly 2 continuous variables' },
+      qqplot: { min: 1, max: 1, description: 'Choose exactly 1 continuous variable' },
+    };
+    return requirements[type] || { min: 1, max: 1, description: 'Select variables' };
+  };
+
+  const canShowChart = chartType && selectedVariables.length > 0;
+  const requirements = chartType ? getChartRequirements(chartType) : null;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -38,21 +57,22 @@ export const ChartingTool = () => {
         <ChartHeader />
 
         <div className="grid grid-cols-12 gap-6">
-          {/* Left Panel - Data Setup */}
+          {/* Left Panel - Chart Setup */}
           <div className="col-span-4 space-y-4">
-            <VariableSelectionCard
-              selectedDataset={selectedDataset}
-              selectedVariables={selectedVariables}
-              onVariablesChange={setSelectedVariables}
-              getDatasetInfo={getDatasetInfo}
-            />
-
-            <ChartTypeCard
-              selectedVariables={selectedVariables}
+            <ChartTypeSelectionCard
               chartType={chartType}
               onTypeChange={setChartType}
-              getVariableType={getVariableType}
             />
+
+            {chartType && (
+              <VariableSelectionCard
+                selectedDataset={selectedDataset}
+                selectedVariables={selectedVariables}
+                onVariablesChange={setSelectedVariables}
+                getDatasetInfo={getDatasetInfo}
+                requirements={requirements}
+              />
+            )}
           </div>
 
           {/* Right Panel - Chart */}
