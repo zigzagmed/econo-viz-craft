@@ -14,36 +14,42 @@ export const useECharts = (
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstanceRef = useRef<echarts.ECharts | null>(null);
 
-  // Initialize chart
+  // Initialize chart when ref is available
   useEffect(() => {
-    if (chartRef.current && !chartInstanceRef.current) {
-      console.log('Initializing ECharts instance...');
-      const chart = echarts.init(chartRef.current);
-      chartInstanceRef.current = chart;
-      console.log('ECharts instance created');
+    const initChart = () => {
+      if (chartRef.current && !chartInstanceRef.current) {
+        console.log('Initializing ECharts instance...');
+        try {
+          const chart = echarts.init(chartRef.current, null, {
+            width: chartRef.current.offsetWidth,
+            height: 500
+          });
+          chartInstanceRef.current = chart;
+          console.log('ECharts instance created successfully');
 
-      const handleResize = () => {
-        if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
-          chartInstanceRef.current.resize();
+          const handleResize = () => {
+            if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
+              chartInstanceRef.current.resize();
+            }
+          };
+
+          window.addEventListener('resize', handleResize);
+          
+          // Cleanup function
+          return () => {
+            window.removeEventListener('resize', handleResize);
+          };
+        } catch (error) {
+          console.error('Failed to initialize ECharts:', error);
         }
-      };
-
-      window.addEventListener('resize', handleResize);
-      
-      return () => {
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, []);
-
-  // Cleanup chart on unmount
-  useEffect(() => {
-    return () => {
-      if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
-        console.log('Disposing ECharts instance');
-        chartInstanceRef.current.dispose();
-        chartInstanceRef.current = null;
       }
+    };
+
+    // Use a small delay to ensure DOM is ready
+    const timer = setTimeout(initChart, 100);
+    
+    return () => {
+      clearTimeout(timer);
     };
   }, []);
 
@@ -87,6 +93,7 @@ export const useECharts = (
       console.log('Generated chart config:', option);
       
       chartInstanceRef.current.setOption(option, true);
+      chartInstanceRef.current.resize();
       console.log('Chart updated successfully');
     } catch (error) {
       console.error('Error updating chart:', error);
@@ -109,6 +116,17 @@ export const useECharts = (
     link.click();
     document.body.removeChild(link);
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
+        console.log('Disposing ECharts instance');
+        chartInstanceRef.current.dispose();
+        chartInstanceRef.current = null;
+      }
+    };
+  }, []);
 
   return { chartRef, chartInstance: chartInstanceRef.current, handleExportChart };
 };

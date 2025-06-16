@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyChartState } from './EmptyChartState';
 import { Button } from '@/components/ui/button';
@@ -62,7 +62,11 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
           <div 
             ref={chartRef} 
             className="w-full border border-gray-200 rounded-lg bg-white"
-            style={{ height: '500px', minHeight: '500px' }}
+            style={{ 
+              height: '500px', 
+              minHeight: '500px',
+              position: 'relative'
+            }}
           />
         )}
       </CardContent>
