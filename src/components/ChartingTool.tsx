@@ -3,6 +3,7 @@ import * as echarts from 'echarts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { VariableSelector } from './charting/VariableSelector';
 import { SmartChartTypeSelector } from './charting/SmartChartTypeSelector';
 import { ChartCustomization } from './charting/ChartCustomization';
@@ -10,7 +11,7 @@ import { StatisticalOverlay } from './charting/StatisticalOverlay';
 import { useChartingData } from '../hooks/useChartingData';
 import { calculateStatistics } from '../utils/statisticalUtils';
 import { generateChartConfig } from '../utils/chartUtils';
-import { BarChart, Settings, Download, Database } from 'lucide-react';
+import { BarChart, Settings, Download, Database, Info } from 'lucide-react';
 
 export const ChartingTool = () => {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -252,22 +253,6 @@ export const ChartingTool = () => {
                 </CardContent>
               </Card>
             )}
-
-            {/* Statistics */}
-            {canShowChart && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Quick Statistics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <StatisticalOverlay
-                    dataset={selectedDataset}
-                    variables={selectedVariables}
-                    getVariableData={getVariableData}
-                  />
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Right Panel - Chart */}
@@ -280,6 +265,21 @@ export const ChartingTool = () => {
                   </CardTitle>
                   {canShowChart && (
                     <div className="flex gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Info className="w-4 h-4" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80">
+                          <StatisticalOverlay
+                            dataset={selectedDataset}
+                            variables={selectedVariables}
+                            getVariableData={getVariableData}
+                          />
+                        </PopoverContent>
+                      </Popover>
+
                       <Dialog open={customizationOpen} onOpenChange={setCustomizationOpen}>
                         <DialogTrigger asChild>
                           <Button variant="outline" size="sm">
