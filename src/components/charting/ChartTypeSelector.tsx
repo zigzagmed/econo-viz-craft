@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, LineChart, PieChart, Scatter } from 'lucide-react';
+import { BarChart, LineChart, PieChart, ScatterChart } from 'lucide-react';
 
 interface ChartTypeProps {
   selectedType: string;
@@ -20,7 +20,7 @@ export const ChartTypeSelector: React.FC<ChartTypeProps> = ({
       { id: 'bar', name: 'Bar Chart', icon: BarChart, minVars: 1, maxVars: 2 },
       { id: 'line', name: 'Line Chart', icon: LineChart, minVars: 2, maxVars: 3 },
       { id: 'pie', name: 'Pie Chart', icon: PieChart, minVars: 1, maxVars: 1 },
-      { id: 'scatter', name: 'Scatter Plot', icon: Scatter, minVars: 2, maxVars: 2 },
+      { id: 'scatter', name: 'Scatter Plot', icon: ScatterChart, minVars: 2, maxVars: 2 },
     ],
     distribution: [
       { id: 'histogram', name: 'Histogram', icon: BarChart, minVars: 1, maxVars: 1 },
@@ -29,10 +29,10 @@ export const ChartTypeSelector: React.FC<ChartTypeProps> = ({
       { id: 'density', name: 'Density Plot', icon: LineChart, minVars: 1, maxVars: 2 },
     ],
     statistical: [
-      { id: 'regression', name: 'Regression Plot', icon: Scatter, minVars: 2, maxVars: 2 },
+      { id: 'regression', name: 'Regression Plot', icon: ScatterChart, minVars: 2, maxVars: 2 },
       { id: 'correlation', name: 'Correlation Matrix', icon: BarChart, minVars: 2, maxVars: 10 },
-      { id: 'residual', name: 'Residual Plot', icon: Scatter, minVars: 2, maxVars: 2 },
-      { id: 'qqplot', name: 'Q-Q Plot', icon: Scatter, minVars: 1, maxVars: 1 },
+      { id: 'residual', name: 'Residual Plot', icon: ScatterChart, minVars: 2, maxVars: 2 },
+      { id: 'qqplot', name: 'Q-Q Plot', icon: ScatterChart, minVars: 1, maxVars: 1 },
     ]
   };
 
