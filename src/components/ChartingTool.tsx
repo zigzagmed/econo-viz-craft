@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,12 +53,12 @@ export const ChartingTool = () => {
       
       switch (type) {
         case 'histogram':
-          title = `Distribution of ${variable}`;
+          title = `${variable} Distribution`;
           xAxisLabel = variable;
           yAxisLabel = 'Frequency';
           break;
         case 'boxplot':
-          title = `${variable} Distribution`;
+          title = `${variable} Box Plot`;
           xAxisLabel = 'Variable';
           yAxisLabel = variable;
           break;
@@ -65,7 +66,7 @@ export const ChartingTool = () => {
           title = `${variable} Breakdown`;
           break;
         default:
-          title = `${variable} Analysis`;
+          title = `${variable} Chart`;
           xAxisLabel = 'Categories';
           yAxisLabel = variable;
       }
@@ -81,12 +82,12 @@ export const ChartingTool = () => {
           yAxisLabel = var2;
           break;
         case 'bar':
-          title = `${var2} by ${var1}`;
+          title = `${var1} and ${var2}`;
           xAxisLabel = var1;
           yAxisLabel = var2;
           break;
         default:
-          title = `${var1} and ${var2} Comparison`;
+          title = `${var1} and ${var2}`;
           xAxisLabel = var1;
           yAxisLabel = var2;
       }
@@ -95,15 +96,15 @@ export const ChartingTool = () => {
       
       switch (type) {
         case 'correlation':
-          title = `Correlation Matrix: ${varNames.join(', ')}`;
+          title = `Correlation Matrix`;
           break;
         case 'line':
-          title = `Trends: ${varNames.join(', ')}`;
+          title = `Multi-Variable Trends`;
           xAxisLabel = varNames[0];
           yAxisLabel = 'Values';
           break;
         default:
-          title = `Multi-Variable Analysis: ${varNames.join(', ')}`;
+          title = `Multi-Variable Analysis`;
           xAxisLabel = 'Variables';
           yAxisLabel = 'Values';
       }
@@ -114,10 +115,11 @@ export const ChartingTool = () => {
 
   // Initialize chart
   useEffect(() => {
-    if (chartRef.current) {
+    if (chartRef.current && !chartInstance) {
+      console.log('Initializing chart...');
       const chart = echarts.init(chartRef.current);
       setChartInstance(chart);
-      console.log('Chart instance initialized');
+      console.log('Chart instance created:', chart);
 
       const handleResize = () => {
         chart.resize();
@@ -129,7 +131,7 @@ export const ChartingTool = () => {
         chart.dispose();
       };
     }
-  }, []);
+  }, [chartRef.current, chartInstance]);
 
   // Update chart when data changes
   useEffect(() => {
@@ -196,11 +198,6 @@ export const ChartingTool = () => {
     return variable?.type || 'continuous';
   };
 
-  const getCurrentVariables = () => {
-    const datasetInfo = getDatasetInfo(selectedDataset);
-    return datasetInfo?.variables || [];
-  };
-
   const canShowChart = selectedVariables.length > 0;
   console.log('Can show chart:', canShowChart, 'Variables:', selectedVariables);
 
@@ -261,7 +258,7 @@ export const ChartingTool = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">
-                    {canShowChart ? chartConfig.title || 'Your Chart' : 'Your Chart'}
+                    {canShowChart ? chartConfig.title : 'Your Chart'}
                   </CardTitle>
                   {canShowChart && (
                     <div className="flex gap-2">
