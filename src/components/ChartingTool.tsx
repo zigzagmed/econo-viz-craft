@@ -3,14 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DatasetSelector } from './charting/DatasetSelector';
 import { VariableSelector } from './charting/VariableSelector';
 import { ChartTypeSelector } from './charting/ChartTypeSelector';
@@ -19,7 +12,7 @@ import { StatisticalOverlay } from './charting/StatisticalOverlay';
 import { useChartingData } from '../hooks/useChartingData';
 import { calculateStatistics } from '../utils/statisticalUtils';
 import { generateChartConfig } from '../utils/chartUtils';
-import { BarChart, LineChart, PieChart, Download } from 'lucide-react';
+import { BarChart, LineChart, Settings, Download } from 'lucide-react';
 
 export const ChartingTool = () => {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -27,6 +20,7 @@ export const ChartingTool = () => {
   const [selectedDataset, setSelectedDataset] = useState<string>('');
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
   const [chartType, setChartType] = useState<string>('bar');
+  const [customizationOpen, setCustomizationOpen] = useState(false);
   const [chartConfig, setChartConfig] = useState({
     title: 'Economic Data Visualization',
     xAxisLabel: 'X Axis',
@@ -96,10 +90,10 @@ export const ChartingTool = () => {
           <p className="text-gray-600">Create publication-ready statistical visualizations with interactive data analysis</p>
         </div>
 
-        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-200px)]">
+        <div className="grid grid-cols-12 gap-6">
           {/* Left Panel - Data Selection */}
-          <div className="col-span-3 space-y-4">
-            <Card className="h-full">
+          <div className="col-span-4 space-y-4">
+            <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <BarChart className="w-5 h-5" />
@@ -113,32 +107,31 @@ export const ChartingTool = () => {
                   onDatasetChange={setSelectedDataset}
                 />
                 
-                <Separator />
-                
-                <VariableSelector
-                  dataset={selectedDataset}
-                  selectedVariables={selectedVariables}
-                  onVariablesChange={setSelectedVariables}
-                  getDatasetInfo={getDatasetInfo}
-                />
+                <div className="border-t pt-4">
+                  <VariableSelector
+                    dataset={selectedDataset}
+                    selectedVariables={selectedVariables}
+                    onVariablesChange={setSelectedVariables}
+                    getDatasetInfo={getDatasetInfo}
+                  />
+                </div>
 
                 {selectedDataset && selectedVariables.length > 0 && (
-                  <>
-                    <Separator />
+                  <div className="border-t pt-4">
                     <StatisticalOverlay
                       dataset={selectedDataset}
                       variables={selectedVariables}
                       getVariableData={getVariableData}
                     />
-                  </>
+                  </div>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Center Panel - Chart Display */}
-          <div className="col-span-6">
-            <Card className="h-full">
+          {/* Right Panel - Chart Display */}
+          <div className="col-span-8">
+            <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -146,6 +139,26 @@ export const ChartingTool = () => {
                     Chart Visualization
                   </CardTitle>
                   <div className="flex gap-2">
+                    <Dialog open={customizationOpen} onOpenChange={setCustomizationOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Settings className="w-4 h-4 mr-1" />
+                          Customize
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Chart Customization</DialogTitle>
+                        </DialogHeader>
+                        <ChartCustomization
+                          config={chartConfig}
+                          onConfigChange={setChartConfig}
+                          chartType={chartType}
+                          selectedVariables={selectedVariables}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                    
                     <Button
                       variant="outline"
                       size="sm"
@@ -167,7 +180,7 @@ export const ChartingTool = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <ChartTypeSelector
                   selectedType={chartType}
                   onTypeChange={setChartType}
@@ -176,28 +189,8 @@ export const ChartingTool = () => {
                 
                 <div 
                   ref={chartRef} 
-                  className="w-full h-96 mt-4 border border-gray-200 rounded-lg bg-white"
-                  style={{ height: 'calc(100% - 100px)' }}
-                />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Panel - Customization */}
-          <div className="col-span-3">
-            <Card className="h-full">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <PieChart className="w-5 h-5" />
-                  Customization
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartCustomization
-                  config={chartConfig}
-                  onConfigChange={setChartConfig}
-                  chartType={chartType}
-                  selectedVariables={selectedVariables}
+                  className="w-full border border-gray-200 rounded-lg bg-white"
+                  style={{ height: '500px', minHeight: '500px' }}
                 />
               </CardContent>
             </Card>
