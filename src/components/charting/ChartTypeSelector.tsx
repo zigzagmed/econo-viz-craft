@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, LineChart, PieChart, ScatterChart } from 'lucide-react';
+import { BarChart, LineChart, PieChart, ScatterChart, TrendingUp } from 'lucide-react';
 
 interface ChartTypeProps {
   selectedType: string;
@@ -15,64 +14,41 @@ export const ChartTypeSelector: React.FC<ChartTypeProps> = ({
   onTypeChange,
   selectedVariables
 }) => {
-  const chartTypes = {
-    basic: [
-      { id: 'bar', name: 'Bar Chart', icon: BarChart, minVars: 1, maxVars: 2 },
-      { id: 'line', name: 'Line Chart', icon: LineChart, minVars: 2, maxVars: 3 },
-      { id: 'pie', name: 'Pie Chart', icon: PieChart, minVars: 1, maxVars: 1 },
-      { id: 'scatter', name: 'Scatter Plot', icon: ScatterChart, minVars: 2, maxVars: 2 },
-    ],
-    distribution: [
-      { id: 'histogram', name: 'Histogram', icon: BarChart, minVars: 1, maxVars: 1 },
-      { id: 'boxplot', name: 'Box Plot', icon: BarChart, minVars: 1, maxVars: 3 },
-      { id: 'violin', name: 'Violin Plot', icon: BarChart, minVars: 1, maxVars: 2 },
-      { id: 'density', name: 'Density Plot', icon: LineChart, minVars: 1, maxVars: 2 },
-    ],
-    statistical: [
-      { id: 'regression', name: 'Regression Plot', icon: ScatterChart, minVars: 2, maxVars: 2 },
-      { id: 'correlation', name: 'Correlation Matrix', icon: BarChart, minVars: 2, maxVars: 10 },
-      { id: 'residual', name: 'Residual Plot', icon: ScatterChart, minVars: 2, maxVars: 2 },
-      { id: 'qqplot', name: 'Q-Q Plot', icon: ScatterChart, minVars: 1, maxVars: 1 },
-    ]
-  };
-
-  const isChartAvailable = (chart: any) => {
-    const varCount = selectedVariables.length;
-    return varCount >= chart.minVars && varCount <= chart.maxVars;
-  };
+  const chartTypes = [
+    { id: 'bar', name: 'Bar Chart', icon: BarChart, minVars: 1, maxVars: 2, description: 'Compare categories or values' },
+    { id: 'line', name: 'Line Chart', icon: LineChart, minVars: 2, maxVars: 3, description: 'Show trends over time' },
+    { id: 'pie', name: 'Pie Chart', icon: PieChart, minVars: 1, maxVars: 1, description: 'Show proportions' },
+    { id: 'scatter', name: 'Scatter Plot', icon: ScatterChart, minVars: 2, maxVars: 2, description: 'Show relationships' },
+    { id: 'histogram', name: 'Histogram', icon: BarChart, minVars: 1, maxVars: 1, description: 'Show distribution' },
+    { id: 'boxplot', name: 'Box Plot', icon: BarChart, minVars: 1, maxVars: 3, description: 'Show quartiles and outliers' },
+    { id: 'regression', name: 'Regression Plot', icon: TrendingUp, minVars: 2, maxVars: 2, description: 'Relationship with trend line' },
+    { id: 'correlation', name: 'Correlation Matrix', icon: BarChart, minVars: 2, maxVars: 10, description: 'Variable correlations' },
+  ];
 
   return (
-    <Tabs defaultValue="basic" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="basic">Basic</TabsTrigger>
-        <TabsTrigger value="distribution">Distribution</TabsTrigger>
-        <TabsTrigger value="statistical">Statistical</TabsTrigger>
-      </TabsList>
-
-      {Object.entries(chartTypes).map(([category, charts]) => (
-        <TabsContent key={category} value={category} className="mt-4">
-          <div className="grid grid-cols-2 gap-2">
-            {charts.map((chart) => {
-              const Icon = chart.icon;
-              const available = isChartAvailable(chart);
-              
-              return (
-                <Button
-                  key={chart.id}
-                  variant={selectedType === chart.id ? "default" : "outline"}
-                  size="sm"
-                  className="h-auto p-3 flex flex-col items-center gap-1"
-                  onClick={() => onTypeChange(chart.id)}
-                  disabled={!available}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="text-xs">{chart.name}</span>
-                </Button>
-              );
-            })}
-          </div>
-        </TabsContent>
-      ))}
-    </Tabs>
+    <div className="space-y-2">
+      {chartTypes.map((chart) => {
+        const Icon = chart.icon;
+        const isSelected = selectedType === chart.id;
+        
+        return (
+          <Button
+            key={chart.id}
+            variant={isSelected ? "default" : "outline"}
+            className="w-full h-auto p-4 flex items-center gap-3 justify-start"
+            onClick={() => onTypeChange(chart.id)}
+          >
+            <Icon className="w-5 h-5 flex-shrink-0" />
+            <div className="flex-1 text-left">
+              <div className="font-medium">{chart.name}</div>
+              <div className="text-xs text-gray-600 mt-1">{chart.description}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                Requires {chart.minVars === chart.maxVars ? chart.minVars : `${chart.minVars}-${chart.maxVars}`} variable{chart.maxVars > 1 ? 's' : ''}
+              </div>
+            </div>
+          </Button>
+        );
+      })}
+    </div>
   );
 };

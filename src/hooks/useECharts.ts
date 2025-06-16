@@ -12,19 +12,19 @@ export const useECharts = (
   getVariableData: (dataset: string, variables: string[]) => any
 ) => {
   const chartRef = useRef<HTMLDivElement>(null);
-  const [chartInstance, setChartInstance] = useState<echarts.ECharts | null>(null);
+  const chartInstanceRef = useRef<echarts.ECharts | null>(null);
 
   // Initialize chart
   useEffect(() => {
-    if (chartRef.current && !chartInstance) {
-      console.log('Initializing chart...');
+    if (chartRef.current && !chartInstanceRef.current) {
+      console.log('Initializing ECharts instance...');
       const chart = echarts.init(chartRef.current);
-      setChartInstance(chart);
-      console.log('Chart instance created:', chart);
+      chartInstanceRef.current = chart;
+      console.log('ECharts instance created');
 
       const handleResize = () => {
-        if (chart && !chart.isDisposed()) {
-          chart.resize();
+        if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
+          chartInstanceRef.current.resize();
         }
       };
 
@@ -32,34 +32,40 @@ export const useECharts = (
       
       return () => {
         window.removeEventListener('resize', handleResize);
-        if (chart && !chart.isDisposed()) {
-          chart.dispose();
-        }
       };
     }
-  }, [chartRef.current]);
+  }, []);
+
+  // Cleanup chart on unmount
+  useEffect(() => {
+    return () => {
+      if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed()) {
+        console.log('Disposing ECharts instance');
+        chartInstanceRef.current.dispose();
+        chartInstanceRef.current = null;
+      }
+    };
+  }, []);
 
   // Update chart when data changes
   useEffect(() => {
     console.log('Chart update effect triggered:', {
-      hasChartInstance: !!chartInstance,
+      hasChartInstance: !!chartInstanceRef.current,
       selectedVariables,
       chartType,
       variableCount: selectedVariables.length
     });
     
-    if (chartInstance && !chartInstance.isDisposed() && selectedVariables.length > 0) {
+    if (chartInstanceRef.current && !chartInstanceRef.current.isDisposed() && 
+        selectedVariables.length > 0 && chartType) {
       updateChart();
     }
-  }, [chartInstance, selectedVariables, chartType, chartConfig]);
+  }, [selectedVariables, chartType, chartConfig]);
 
   const updateChart = () => {
-    if (!chartInstance || chartInstance.isDisposed() || selectedVariables.length === 0) {
-      console.log('Cannot update chart:', {
-        hasChartInstance: !!chartInstance,
-        isDisposed: chartInstance?.isDisposed(),
-        variableCount: selectedVariables.length
-      });
+    if (!chartInstanceRef.current || chartInstanceRef.current.isDisposed() || 
+        selectedVariables.length === 0 || !chartType) {
+      console.log('Cannot update chart - missing requirements');
       return;
     }
 
@@ -67,7 +73,12 @@ export const useECharts = (
     
     try {
       const data = getVariableData(selectedDataset, selectedVariables);
-      console.log('Retrieved data:', data.slice(0, 3)); // Log first 3 rows
+      console.log('Retrieved data:', data?.slice(0, 3));
+      
+      if (!data || data.length === 0) {
+        console.log('No data available for chart');
+        return;
+      }
       
       const stats = calculateStatistics(data, selectedVariables);
       console.log('Calculated stats:', stats);
@@ -75,7 +86,7 @@ export const useECharts = (
       const option = generateChartConfig(chartType, data, selectedVariables, chartConfig, stats);
       console.log('Generated chart config:', option);
       
-      chartInstance.setOption(option, true);
+      chartInstanceRef.current.setOption(option, true);
       console.log('Chart updated successfully');
     } catch (error) {
       console.error('Error updating chart:', error);
@@ -83,9 +94,9 @@ export const useECharts = (
   };
 
   const handleExportChart = (format: 'png' | 'svg') => {
-    if (!chartInstance || chartInstance.isDisposed()) return;
+    if (!chartInstanceRef.current || chartInstanceRef.current.isDisposed()) return;
 
-    const url = chartInstance.getDataURL({
+    const url = chartInstanceRef.current.getDataURL({
       type: format,
       pixelRatio: 2,
       backgroundColor: '#fff'
@@ -99,5 +110,5 @@ export const useECharts = (
     document.body.removeChild(link);
   };
 
-  return { chartRef, chartInstance, handleExportChart };
+  return { chartRef, chartInstance: chartInstanceRef.current, handleExportChart };
 };

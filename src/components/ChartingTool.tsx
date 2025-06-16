@@ -12,7 +12,6 @@ export const ChartingTool = () => {
   const selectedDataset = 'gdp_growth';
   const [chartType, setChartType] = useState<string>('');
   const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
-  const [customizationOpen, setCustomizationOpen] = useState(false);
 
   const { getVariableData, getDatasetInfo } = useChartingData();
   const { chartConfig, setChartConfig } = useChartConfig(selectedVariables, chartType);
@@ -23,12 +22,6 @@ export const ChartingTool = () => {
     chartConfig,
     getVariableData
   );
-
-  const getVariableType = (variableName: string) => {
-    const datasetInfo = getDatasetInfo(selectedDataset);
-    const variable = datasetInfo?.variables.find(v => v.name === variableName);
-    return variable?.type || 'continuous';
-  };
 
   const getChartRequirements = (type: string) => {
     const requirements = {
@@ -85,8 +78,8 @@ export const ChartingTool = () => {
               selectedVariables={selectedVariables}
               chartType={chartType}
               chartConfig={chartConfig}
-              customizationOpen={customizationOpen}
-              setCustomizationOpen={setCustomizationOpen}
+              customizationOpen={false}
+              setCustomizationOpen={() => {}}
               onConfigChange={setChartConfig}
               onExportChart={handleExportChart}
               getVariableData={getVariableData}

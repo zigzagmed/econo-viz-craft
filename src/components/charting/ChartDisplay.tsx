@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyChartState } from './EmptyChartState';
-import { ChartControls } from './ChartControls';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 
 interface ChartDisplayProps {
   canShowChart: boolean;
@@ -23,15 +24,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
   canShowChart,
   chartTitle,
   chartRef,
-  selectedDataset,
-  selectedVariables,
-  chartType,
-  chartConfig,
-  customizationOpen,
-  setCustomizationOpen,
-  onConfigChange,
-  onExportChart,
-  getVariableData
+  onExportChart
 }) => {
   return (
     <Card>
@@ -41,17 +34,24 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
             {canShowChart ? chartTitle : 'Your Chart'}
           </CardTitle>
           {canShowChart && (
-            <ChartControls
-              selectedDataset={selectedDataset}
-              selectedVariables={selectedVariables}
-              chartType={chartType}
-              chartConfig={chartConfig}
-              customizationOpen={customizationOpen}
-              setCustomizationOpen={setCustomizationOpen}
-              onConfigChange={onConfigChange}
-              onExportChart={onExportChart}
-              getVariableData={getVariableData}
-            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onExportChart('png')}
+              >
+                <Download className="w-4 h-4 mr-1" />
+                PNG
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onExportChart('svg')}
+              >
+                <Download className="w-4 h-4 mr-1" />
+                SVG
+              </Button>
+            </div>
           )}
         </div>
       </CardHeader>
