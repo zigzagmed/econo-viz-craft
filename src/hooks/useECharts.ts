@@ -23,16 +23,21 @@ export const useECharts = (
       console.log('Chart instance created:', chart);
 
       const handleResize = () => {
-        chart.resize();
+        if (chart && !chart.isDisposed()) {
+          chart.resize();
+        }
       };
 
       window.addEventListener('resize', handleResize);
+      
       return () => {
         window.removeEventListener('resize', handleResize);
-        chart.dispose();
+        if (chart && !chart.isDisposed()) {
+          chart.dispose();
+        }
       };
     }
-  }, [chartRef.current, chartInstance]);
+  }, [chartRef.current]);
 
   // Update chart when data changes
   useEffect(() => {
@@ -43,15 +48,16 @@ export const useECharts = (
       variableCount: selectedVariables.length
     });
     
-    if (chartInstance && selectedVariables.length > 0) {
+    if (chartInstance && !chartInstance.isDisposed() && selectedVariables.length > 0) {
       updateChart();
     }
   }, [chartInstance, selectedVariables, chartType, chartConfig]);
 
   const updateChart = () => {
-    if (!chartInstance || selectedVariables.length === 0) {
+    if (!chartInstance || chartInstance.isDisposed() || selectedVariables.length === 0) {
       console.log('Cannot update chart:', {
         hasChartInstance: !!chartInstance,
+        isDisposed: chartInstance?.isDisposed(),
         variableCount: selectedVariables.length
       });
       return;
@@ -77,7 +83,7 @@ export const useECharts = (
   };
 
   const handleExportChart = (format: 'png' | 'svg') => {
-    if (!chartInstance) return;
+    if (!chartInstance || chartInstance.isDisposed()) return;
 
     const url = chartInstance.getDataURL({
       type: format,
