@@ -20,15 +20,96 @@ export const ChartingTool = () => {
   const [chartType, setChartType] = useState<string>('bar');
   const [customizationOpen, setCustomizationOpen] = useState(false);
   const [chartConfig, setChartConfig] = useState({
-    title: 'GDP Growth Data Visualization',
-    xAxisLabel: 'X Axis',
-    yAxisLabel: 'Y Axis',
+    title: '',
+    xAxisLabel: '',
+    yAxisLabel: '',
     colorScheme: 'academic',
     showStats: true,
     showTrendLine: false
   });
 
   const { getVariableData, getDatasetInfo } = useChartingData();
+
+  // Update chart config when variables change
+  useEffect(() => {
+    if (selectedVariables.length > 0) {
+      const newConfig = generateDynamicConfig(selectedVariables, chartType);
+      setChartConfig(prev => ({
+        ...prev,
+        ...newConfig
+      }));
+    }
+  }, [selectedVariables, chartType]);
+
+  const generateDynamicConfig = (variables: string[], type: string) => {
+    let title = '';
+    let xAxisLabel = '';
+    let yAxisLabel = '';
+
+    if (variables.length === 1) {
+      const variable = variables[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      switch (type) {
+        case 'histogram':
+          title = `Distribution of ${variable}`;
+          xAxisLabel = variable;
+          yAxisLabel = 'Frequency';
+          break;
+        case 'boxplot':
+          title = `${variable} Distribution`;
+          xAxisLabel = 'Variable';
+          yAxisLabel = variable;
+          break;
+        case 'pie':
+          title = `${variable} Breakdown`;
+          break;
+        default:
+          title = `${variable} Analysis`;
+          xAxisLabel = 'Categories';
+          yAxisLabel = variable;
+      }
+    } else if (variables.length === 2) {
+      const var1 = variables[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const var2 = variables[1].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      switch (type) {
+        case 'scatter':
+        case 'regression':
+          title = `${var1} vs ${var2}`;
+          xAxisLabel = var1;
+          yAxisLabel = var2;
+          break;
+        case 'bar':
+          title = `${var2} by ${var1}`;
+          xAxisLabel = var1;
+          yAxisLabel = var2;
+          break;
+        default:
+          title = `${var1} and ${var2} Comparison`;
+          xAxisLabel = var1;
+          yAxisLabel = var2;
+      }
+    } else {
+      const varNames = variables.map(v => v.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+      
+      switch (type) {
+        case 'correlation':
+          title = `Correlation Matrix: ${varNames.join(', ')}`;
+          break;
+        case 'line':
+          title = `Trends: ${varNames.join(', ')}`;
+          xAxisLabel = varNames[0];
+          yAxisLabel = 'Values';
+          break;
+        default:
+          title = `Multi-Variable Analysis: ${varNames.join(', ')}`;
+          xAxisLabel = 'Variables';
+          yAxisLabel = 'Values';
+      }
+    }
+
+    return { title, xAxisLabel, yAxisLabel };
+  };
 
   // Initialize chart
   useEffect(() => {
@@ -194,7 +275,9 @@ export const ChartingTool = () => {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Your Chart</CardTitle>
+                  <CardTitle className="text-lg">
+                    {canShowChart ? chartConfig.title || 'Your Chart' : 'Your Chart'}
+                  </CardTitle>
                   {canShowChart && (
                     <div className="flex gap-2">
                       <Dialog open={customizationOpen} onOpenChange={setCustomizationOpen}>
