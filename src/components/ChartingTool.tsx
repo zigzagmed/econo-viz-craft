@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +35,7 @@ export const ChartingTool = () => {
     if (chartRef.current) {
       const chart = echarts.init(chartRef.current);
       setChartInstance(chart);
+      console.log('Chart instance initialized');
 
       const handleResize = () => {
         chart.resize();
@@ -51,19 +51,44 @@ export const ChartingTool = () => {
 
   // Update chart when data changes
   useEffect(() => {
+    console.log('Chart update effect triggered:', {
+      hasChartInstance: !!chartInstance,
+      selectedVariables,
+      chartType,
+      variableCount: selectedVariables.length
+    });
+    
     if (chartInstance && selectedVariables.length > 0) {
       updateChart();
     }
   }, [chartInstance, selectedVariables, chartType, chartConfig]);
 
   const updateChart = () => {
-    if (!chartInstance || selectedVariables.length === 0) return;
+    if (!chartInstance || selectedVariables.length === 0) {
+      console.log('Cannot update chart:', {
+        hasChartInstance: !!chartInstance,
+        variableCount: selectedVariables.length
+      });
+      return;
+    }
 
-    const data = getVariableData(selectedDataset, selectedVariables);
-    const stats = calculateStatistics(data, selectedVariables);
-    const option = generateChartConfig(chartType, data, selectedVariables, chartConfig, stats);
+    console.log('Updating chart with:', { selectedVariables, chartType });
     
-    chartInstance.setOption(option, true);
+    try {
+      const data = getVariableData(selectedDataset, selectedVariables);
+      console.log('Retrieved data:', data.slice(0, 3)); // Log first 3 rows
+      
+      const stats = calculateStatistics(data, selectedVariables);
+      console.log('Calculated stats:', stats);
+      
+      const option = generateChartConfig(chartType, data, selectedVariables, chartConfig, stats);
+      console.log('Generated chart config:', option);
+      
+      chartInstance.setOption(option, true);
+      console.log('Chart updated successfully');
+    } catch (error) {
+      console.error('Error updating chart:', error);
+    }
   };
 
   const handleExportChart = (format: 'png' | 'svg') => {
@@ -95,6 +120,7 @@ export const ChartingTool = () => {
   };
 
   const canShowChart = selectedVariables.length > 0;
+  console.log('Can show chart:', canShowChart, 'Variables:', selectedVariables);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
