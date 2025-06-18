@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { ChartHeader } from './charting/ChartHeader';
 import { ChartTypeSelectionCard } from './charting/ChartTypeSelectionCard';
 import { RoleBasedVariableSelector } from './charting/RoleBasedVariableSelector';
-import { SelectedRolesDisplay } from './charting/SelectedRolesDisplay';
 import { ChartDisplay } from './charting/ChartDisplay';
 import { useChartingData } from '../hooks/useChartingData';
 import { useChartConfig } from '../hooks/useChartConfig';
@@ -59,7 +58,7 @@ export const ChartingTool = () => {
           </div>
 
           {/* Right Panel - Chart */}
-          <div className="col-span-8 space-y-4">
+          <div className="col-span-8">
             <ChartDisplay
               canShowChart={canShowChart}
               chartTitle={chartConfig.title}
@@ -75,14 +74,6 @@ export const ChartingTool = () => {
               getVariableData={getVariableData}
               getDatasetInfo={getDatasetInfo}
             />
-
-            {/* Selected Variables Display - Now below the chart */}
-            {Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles]) && (
-              <SelectedRolesDisplay
-                variableRoles={variableRoles}
-                chartType={chartType}
-              />
-            )}
           </div>
         </div>
       </div>
