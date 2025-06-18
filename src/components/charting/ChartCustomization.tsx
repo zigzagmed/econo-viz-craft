@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
 import { Palette } from 'lucide-react';
 
 interface ChartCustomizationProps {
@@ -43,7 +44,7 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
     titlePosition: 'top' as 'top' | 'center',
     xAxisLabelDistance: 30,
     yAxisLabelDistance: 50,
-    histogramBins: 20,
+    histogramBins: 10,
     statsDecimals: 2,
     ...config
   });
@@ -171,16 +172,23 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
       </div>
 
       {showHistogramBins && (
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Number of Bins</Label>
-          <Input
-            type="number"
-            value={localConfig.histogramBins}
-            onChange={(e) => updateLocalConfig('histogramBins', parseInt(e.target.value) || 20)}
-            placeholder="Number of histogram bins"
-            min="5"
-            max="100"
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Number of Bins</Label>
+            <span className="text-sm text-gray-600">{localConfig.histogramBins}</span>
+          </div>
+          <Slider
+            value={[localConfig.histogramBins]}
+            onValueChange={(value) => updateLocalConfig('histogramBins', value[0])}
+            max={32}
+            min={2}
+            step={1}
+            className="w-full"
           />
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>2</span>
+            <span>32</span>
+          </div>
         </div>
       )}
 
