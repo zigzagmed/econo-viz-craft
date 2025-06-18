@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -127,6 +126,12 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
     );
   };
 
+  // Check if X and Y axes are the same for line charts
+  const isLineChartSameXY = chartType === 'line' && 
+    variableRoles.xAxis && 
+    variableRoles.yAxis && 
+    variableRoles.xAxis === variableRoles.yAxis;
+
   const handleRoleChange = (role: string, variable: string | undefined) => {
     const newRoles = { ...variableRoles };
     if (variable === 'none') {
@@ -134,17 +139,22 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
     } else {
       (newRoles as any)[role] = variable;
     }
+
+    // Auto-set series to gdp_growth when X=Y in line charts
+    if (chartType === 'line' && role === 'yAxis' && variable === newRoles.xAxis) {
+      newRoles.series = 'gdp_growth';
+    }
+
     onRolesChange(newRoles);
   };
 
   const requiredRoles = roleKeys.filter(role => roleRequirements[role].required);
   const missingRequiredRoles = requiredRoles.filter(role => !variableRoles[role as keyof VariableRoles]);
 
-  // Check for potentially confusing configurations
-  const showLineChartWarning = chartType === 'line' && 
-    variableRoles.xAxis && 
-    variableRoles.yAxis && 
-    variableRoles.xAxis === variableRoles.yAxis;
+  const isRoleDisabled = (role: string) => {
+    // Disable series selection when X=Y in line charts
+    return chartType === 'line' && role === 'series' && isLineChartSameXY;
+  };
 
   return (
     <Card>
@@ -164,15 +174,11 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
           </Alert>
         )}
 
-        {showLineChartWarning && (
-          <Alert className="border-amber-200 bg-amber-50">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="text-amber-800">
-              <strong>Note:</strong> You've selected the same variable for both X and Y axes. 
-              {variableRoles.series ? 
-                ` The chart will show ${variableRoles.xAxis} vs ${variableRoles.series} instead.` :
-                ` This will show a diagonal line (${variableRoles.xAxis} = ${variableRoles.yAxis}). Consider adding a Series variable for more meaningful analysis.`
-              }
+        {isLineChartSameXY && (
+          <Alert className="border-blue-200 bg-blue-50">
+            <Info className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800">
+              <strong>Auto-configured:</strong> Since X and Y axes are the same, the series has been automatically set to 'gdp_growth' to create a meaningful line chart showing {variableRoles.xAxis} vs gdp_growth.
             </AlertDescription>
           </Alert>
         )}
@@ -182,23 +188,28 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
             const requirement = roleRequirements[role];
             const filteredVariables = getFilteredVariables(requirement.allowedTypes);
             const selectedVariable = variableRoles[role as keyof VariableRoles];
+            const disabled = isRoleDisabled(role);
 
             return (
               <div key={role} className="space-y-2">
                 <div className="flex items-center gap-2">
                   <label className="text-sm font-medium">{requirement.label}</label>
-                  {requirement.required && (
-                    <Badge variant="destructive" className="text-xs">Required</Badge>
-                  )}
                   <HoverCard>
                     <HoverCardTrigger asChild>
-                      <Info className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
+                      <div className="relative cursor-help">
+                        <Info className="w-4 h-4 text-gray-400 hover:text-gray-600" />
+                        {requirement.required && (
+                          <Badge variant="destructive" className="absolute -top-1 -right-1 text-xs px-1 py-0 h-4 min-w-0">
+                            !
+                          </Badge>
+                        )}
+                      </div>
                     </HoverCardTrigger>
                     <HoverCardContent className="w-80">
                       <div className="space-y-2">
                         <p className="text-sm font-medium">{requirement.description}</p>
                         <div className="space-y-1">
-                          <p className="text-xs text-gray-600">Accepted variable types:</p>
+                          <p className="text-xs text-gray-600">Accepted data types:</p>
                           <div className="flex gap-1">
                             {requirement.allowedTypes.map(type => (
                               <Badge key={type} className={`text-xs ${getTypeColor(type)}`}>
@@ -207,11 +218,9 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
                             ))}
                           </div>
                         </div>
-                        {chartType === 'line' && role === 'yAxis' && (
+                        {requirement.required && (
                           <div className="pt-2 border-t">
-                            <p className="text-xs text-gray-600">
-                              <strong>Tip:</strong> For line charts, choose different variables for X and Y axes to show meaningful relationships.
-                            </p>
+                            <Badge variant="destructive" className="text-xs">Required Field</Badge>
                           </div>
                         )}
                       </div>
@@ -220,15 +229,16 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
                 </div>
                 
                 <Select
-                  value={selectedVariable || 'none'}
+                  value={disabled ? 'gdp_growth' : (selectedVariable || 'none')}
                   onValueChange={(value) => handleRoleChange(role, value)}
+                  disabled={disabled}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className={`w-full ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     <SelectValue placeholder={`Select ${requirement.label.toLowerCase()}`} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {filteredVariables.map((variable) => (
+                    {!disabled && <SelectItem value="none">None</SelectItem>}
+                    {(disabled ? [{ name: 'gdp_growth', type: 'continuous' }] : filteredVariables).map((variable) => (
                       <SelectItem key={variable.name} value={variable.name}>
                         <div className="flex items-center gap-2">
                           <span>{variable.name}</span>
