@@ -42,6 +42,19 @@ const formatVariableName = (variable: string) => {
   return variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
+const getChartTypeDescription = (chartType: string) => {
+  const descriptions: Record<string, string> = {
+    scatter: 'Scatter Plot - Shows relationship between two continuous variables',
+    regression: 'Regression Analysis - Shows relationship with trend line',
+    bar: 'Bar Chart - Compares categories',
+    line: 'Line Chart - Shows trends over time or categories',
+    pie: 'Pie Chart - Shows proportions of a whole',
+    histogram: 'Histogram - Shows distribution of a single variable',
+    boxplot: 'Box Plot - Shows distribution summary statistics'
+  };
+  return descriptions[chartType] || 'Chart Analysis';
+};
+
 export const SelectedRolesDisplay: React.FC<SelectedRolesDisplayProps> = ({
   variableRoles,
   chartType
@@ -55,7 +68,10 @@ export const SelectedRolesDisplay: React.FC<SelectedRolesDisplayProps> = ({
   return (
     <Card className="mb-4">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm">Selected Variables</CardTitle>
+        <div className="space-y-1">
+          <CardTitle className="text-sm">Selected Variables</CardTitle>
+          <p className="text-xs text-gray-500">{getChartTypeDescription(chartType)}</p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-2">
         {assignedRoles.map(([role, variable]) => (
@@ -66,6 +82,31 @@ export const SelectedRolesDisplay: React.FC<SelectedRolesDisplayProps> = ({
             </Badge>
           </div>
         ))}
+        
+        {/* Show additional info based on chart type */}
+        {chartType === 'regression' && (
+          <div className="mt-3 pt-2 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              ✓ Trend line and R² value will be displayed
+            </p>
+          </div>
+        )}
+        
+        {chartType === 'histogram' && assignedRoles.length === 1 && (
+          <div className="mt-3 pt-2 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              Shows frequency distribution with automatic binning
+            </p>
+          </div>
+        )}
+        
+        {['scatter', 'bar', 'line'].includes(chartType) && assignedRoles.length >= 2 && (
+          <div className="mt-3 pt-2 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              Statistical overlay available in customization
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

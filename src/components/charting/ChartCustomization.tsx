@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -89,11 +90,10 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
     }
   };
 
-  const showTrendLineOption = ['scatter', 'regression', 'line'].includes(chartType);
   const showStatsOption = !['pie'].includes(chartType);
 
   return (
-    <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+    <div className="space-y-4">
       <div className="space-y-2">
         <Label className="text-sm font-medium">Chart Title</Label>
         <Input
@@ -202,17 +202,6 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
             <Label htmlFor="showStats" className="text-sm">Show Statistics</Label>
           </div>
         )}
-
-        {showTrendLineOption && (
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="showTrendLine"
-              checked={localConfig.showTrendLine}
-              onCheckedChange={(checked) => updateLocalConfig('showTrendLine', checked)}
-            />
-            <Label htmlFor="showTrendLine" className="text-sm">Show Trend Line</Label>
-          </div>
-        )}
       </div>
 
       {/* Apply Button - At the bottom */}
@@ -225,3 +214,4 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
     </div>
   );
 };
+
