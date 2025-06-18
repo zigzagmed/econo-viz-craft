@@ -11,7 +11,7 @@ export const getChartRoleRequirements = (chartType: string): ChartRoleRequiremen
     line: {
       xAxis: { required: true, label: 'X-Axis', description: 'Time or sequence variable', allowedTypes: ['continuous', 'categorical'] },
       yAxis: { required: true, label: 'Y-Axis', description: 'Values to plot', allowedTypes: ['continuous'] },
-      series: { required: false, label: 'Series', description: 'Multiple lines', allowedTypes: ['continuous'] },
+      groupBy: { required: false, label: 'Group By', description: 'Split data into multiple lines by category', allowedTypes: ['categorical', 'binary'] },
       color: { required: false, label: 'Color', description: 'Group by color', allowedTypes: ['categorical', 'binary'] }
     },
     scatter: {

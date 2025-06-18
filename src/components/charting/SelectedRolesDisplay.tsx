@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +8,7 @@ interface VariableRoles {
   color?: string;
   size?: string;
   series?: string;
+  groupBy?: string;
 }
 
 interface SelectedRolesDisplayProps {
@@ -22,7 +22,8 @@ const getRoleLabel = (role: string) => {
     yAxis: 'Y-Axis',
     color: 'Color',
     size: 'Size',
-    series: 'Series'
+    series: 'Series',
+    groupBy: 'Group By'
   };
   return labels[role] || role;
 };
@@ -33,7 +34,8 @@ const getRoleColor = (role: string) => {
     yAxis: 'bg-green-100 text-green-800',
     color: 'bg-purple-100 text-purple-800',
     size: 'bg-orange-100 text-orange-800',
-    series: 'bg-pink-100 text-pink-800'
+    series: 'bg-pink-100 text-pink-800',
+    groupBy: 'bg-pink-100 text-pink-800'
   };
   return colors[role] || 'bg-gray-100 text-gray-800';
 };
@@ -64,12 +66,6 @@ export const SelectedRolesDisplay: React.FC<SelectedRolesDisplayProps> = ({
   if (assignedRoles.length === 0) {
     return null;
   }
-
-  // Check for same X and Y in line chart
-  const isLineChartSameXY = chartType === 'line' && 
-    variableRoles.xAxis && 
-    variableRoles.yAxis && 
-    variableRoles.xAxis === variableRoles.yAxis;
 
   return (
     <Card className="mb-4">
@@ -106,19 +102,16 @@ export const SelectedRolesDisplay: React.FC<SelectedRolesDisplayProps> = ({
           </div>
         )}
         
-        {chartType === 'line' && isLineChartSameXY && (
+        {chartType === 'line' && variableRoles.groupBy && (
           <div className="mt-3 pt-2 border-t border-gray-100">
-            <p className="text-xs text-amber-600">
-              {variableRoles.series ? 
-                `Will plot ${variableRoles.xAxis} vs ${variableRoles.series}` :
-                `Will show diagonal line (${variableRoles.xAxis} = ${variableRoles.yAxis})`
-              }
+            <p className="text-xs text-gray-500">
+              Will create separate lines for each {variableRoles.groupBy} category
             </p>
           </div>
         )}
         
-        {['scatter', 'bar', 'line'].includes(chartType) && assignedRoles.length >= 2 && !isLineChartSameXY && (
-          <div className="mt-3 pt-2 border-t border-gray-100">
+        {['scatter', 'bar', 'line'].includes(chartType) && assignedRoles.length >= 2 && (
+          <div className="mt-3 pt-2 border-gray-100">
             <p className="text-xs text-gray-500">
               Statistical overlay available in customization
             </p>

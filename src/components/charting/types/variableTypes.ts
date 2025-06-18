@@ -12,6 +12,7 @@ export interface VariableRoles {
   color?: string;
   size?: string;
   series?: string;
+  groupBy?: string;
 }
 
 export interface ChartRoleRequirements {

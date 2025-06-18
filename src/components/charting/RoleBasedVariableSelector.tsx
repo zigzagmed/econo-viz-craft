@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database } from 'lucide-react';
@@ -44,12 +43,6 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
     );
   };
 
-  // Check if X and Y axes are the same for line charts
-  const isLineChartSameXY = chartType === 'line' && 
-    variableRoles.xAxis && 
-    variableRoles.yAxis && 
-    variableRoles.xAxis === variableRoles.yAxis;
-
   const handleRoleChange = (role: string, variable: string | undefined) => {
     const newRoles = { ...variableRoles };
     if (variable === 'none') {
@@ -58,21 +51,11 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
       (newRoles as any)[role] = variable;
     }
 
-    // Auto-set series to gdp_growth when X=Y in line charts
-    if (chartType === 'line' && role === 'yAxis' && variable === newRoles.xAxis) {
-      newRoles.series = 'gdp_growth';
-    }
-
     onRolesChange(newRoles);
   };
 
   const requiredRoles = roleKeys.filter(role => roleRequirements[role].required);
   const missingRequiredRoles = requiredRoles.filter(role => !variableRoles[role as keyof VariableRoles]);
-
-  const isRoleDisabled = (role: string) => {
-    // Disable series selection when X=Y in line charts
-    return chartType === 'line' && role === 'series' && isLineChartSameXY;
-  };
 
   return (
     <Card>
@@ -86,7 +69,7 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
         <ValidationAlerts
           missingRequiredRoles={missingRequiredRoles}
           roleRequirements={roleRequirements}
-          isLineChartSameXY={isLineChartSameXY}
+          isLineChartSameXY={false}
           variableRoles={variableRoles}
           chartType={chartType}
         />
@@ -96,7 +79,6 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
             const requirement = roleRequirements[role];
             const filteredVariables = getFilteredVariables(requirement.allowedTypes);
             const selectedVariable = variableRoles[role as keyof VariableRoles];
-            const disabled = isRoleDisabled(role);
 
             return (
               <RoleSelector
@@ -105,7 +87,7 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
                 requirement={requirement}
                 selectedVariable={selectedVariable}
                 filteredVariables={filteredVariables}
-                disabled={disabled}
+                disabled={false}
                 onRoleChange={handleRoleChange}
               />
             );

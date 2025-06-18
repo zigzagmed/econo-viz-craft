@@ -44,11 +44,11 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
           title = `${xVar} vs ${yVar}`;
           xAxisLabel = xVar;
           yAxisLabel = yVar;
-          showTrendLine = true; // Enable trend line by default for regression
+          showTrendLine = true;
           break;
         case 'bar':
         case 'line':
-          title = `${xVar} and ${yVar}`;
+          title = roles.groupBy ? `${yVar} by ${xVar} (grouped by ${formatVariableName(roles.groupBy)})` : `${yVar} by ${xVar}`;
           xAxisLabel = xVar;
           yAxisLabel = yVar;
           break;

@@ -6,6 +6,7 @@ interface VariableRoles {
   color?: string;
   size?: string;
   series?: string;
+  groupBy?: string;
 }
 
 const colorSchemes = {
@@ -163,41 +164,28 @@ const generateBarChart = (data: any[], variableRoles: VariableRoles, config: any
 const generateLineChart = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
   const xVar = variableRoles.xAxis!;
   const yVar = variableRoles.yAxis!;
-  const seriesVar = variableRoles.series;
+  const groupByVar = variableRoles.groupBy;
   const sortedData = [...data].sort((a, b) => a[xVar] - b[xVar]);
   
   const series = [];
   
-  // Check if X and Y are the same variable
-  const sameXY = xVar === yVar;
-  
-  if (sameXY && seriesVar) {
-    // When X and Y are the same, only show X vs Series line (more meaningful)
-    series.push({
-      name: `${xVar} vs ${seriesVar}`,
-      data: sortedData.map(item => [item[xVar], item[seriesVar]]),
-      type: 'line',
-      itemStyle: {
-        color: colors[0]
-      }
-    });
-  } else if (sameXY && !seriesVar) {
-    // When X and Y are the same and no series, show diagonal line (X = Y)
-    const minVal = Math.min(...sortedData.map(item => item[xVar]));
-    const maxVal = Math.max(...sortedData.map(item => item[xVar]));
-    series.push({
-      name: `${xVar} = ${yVar}`,
-      data: [[minVal, minVal], [maxVal, maxVal]],
-      type: 'line',
-      itemStyle: {
-        color: colors[0]
-      },
-      lineStyle: {
-        type: 'dashed'
-      }
+  if (groupByVar) {
+    // Group data by the groupBy variable and create separate lines
+    const groupValues = [...new Set(data.map(item => item[groupByVar]))];
+    
+    groupValues.forEach((groupValue, index) => {
+      const filteredData = sortedData.filter(item => item[groupByVar] === groupValue);
+      series.push({
+        name: `${yVar} (${groupValue})`,
+        data: filteredData.map(item => [item[xVar], item[yVar]]),
+        type: 'line',
+        itemStyle: {
+          color: colors[index % colors.length]
+        }
+      });
     });
   } else {
-    // Normal case: X and Y are different variables
+    // Single line: Y vs X
     series.push({
       name: yVar,
       data: sortedData.map(item => [item[xVar], item[yVar]]),
@@ -206,17 +194,6 @@ const generateLineChart = (data: any[], variableRoles: VariableRoles, config: an
         color: colors[0]
       }
     });
-
-    if (seriesVar) {
-      series.push({
-        name: seriesVar,
-        data: sortedData.map(item => [item[xVar], item[seriesVar]]),
-        type: 'line',
-        itemStyle: {
-          color: colors[1]
-        }
-      });
-    }
   }
 
   return {
