@@ -98,6 +98,10 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
     !selectedVariables.includes(variable)
   );
 
+  const handleColorVariableChange = (value: string) => {
+    updateLocalConfig('colorVariable', value === 'none' ? undefined : value);
+  };
+
   return (
     <div className="space-y-4 max-h-[70vh] overflow-y-auto">
       {/* Selected Variables Section - At the top */}
@@ -156,14 +160,14 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
           <div className="space-y-2">
             <Label className="text-sm font-medium">Color Variable</Label>
             <Select 
-              value={localConfig.colorVariable || ''} 
-              onValueChange={(value) => updateLocalConfig('colorVariable', value || undefined)}
+              value={localConfig.colorVariable || 'none'} 
+              onValueChange={handleColorVariableChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select variable for coloring (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {colorVariableOptions.map((variable) => (
                   <SelectItem key={variable} value={variable}>
                     {variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
