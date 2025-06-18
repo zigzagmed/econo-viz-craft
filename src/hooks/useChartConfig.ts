@@ -7,6 +7,7 @@ interface VariableRoles {
   color?: string;
   size?: string;
   series?: string;
+  groupBy?: string;
 }
 
 export const useChartConfig = (variableRoles: VariableRoles, chartType: string) => {
