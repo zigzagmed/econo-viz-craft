@@ -30,23 +30,23 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
   }
 
   return (
-    <Card className="mt-4">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Chart Statistics</CardTitle>
+    <Card className="mt-4 w-fit max-w-md">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Chart Statistics</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Statistic</TableHead>
-              <TableHead>Value</TableHead>
+              <TableHead className="text-xs font-medium py-2">Statistic</TableHead>
+              <TableHead className="text-xs font-medium py-2">Value</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {statEntries.map(([statName, statData]) => (
               <TableRow key={statName}>
-                <TableCell className="font-medium">{statName}</TableCell>
-                <TableCell>{formatValue(statData.value)}</TableCell>
+                <TableCell className="font-medium text-xs py-2">{statName}</TableCell>
+                <TableCell className="text-xs py-2">{formatValue(statData.value)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
