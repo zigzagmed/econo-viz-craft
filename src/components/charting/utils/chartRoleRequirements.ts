@@ -11,8 +11,7 @@ export const getChartRoleRequirements = (chartType: string): ChartRoleRequiremen
     line: {
       xAxis: { required: true, label: 'X-Axis', description: 'Time or sequence variable', allowedTypes: ['continuous', 'categorical'] },
       yAxis: { required: true, label: 'Y-Axis', description: 'Values to plot', allowedTypes: ['continuous'] },
-      groupBy: { required: false, label: 'Group By', description: 'Split data into multiple lines by category', allowedTypes: ['categorical', 'binary'] },
-      color: { required: false, label: 'Color', description: 'Group by color', allowedTypes: ['categorical', 'binary'] }
+      groupBy: { required: false, label: 'Group By', description: 'Split data into multiple lines by category', allowedTypes: ['categorical', 'binary'] }
     },
     scatter: {
       xAxis: { required: true, label: 'X-Axis', description: 'Horizontal values', allowedTypes: ['continuous'] },
@@ -29,14 +28,15 @@ export const getChartRoleRequirements = (chartType: string): ChartRoleRequiremen
       xAxis: { required: true, label: 'Category', description: 'Categories for pie slices', allowedTypes: ['categorical', 'binary'] }
     },
     histogram: {
-      xAxis: { required: true, label: 'Variable', description: 'Variable to show distribution', allowedTypes: ['continuous'] }
+      xAxis: { required: true, label: 'Variable', description: 'Variable to show distribution', allowedTypes: ['continuous'] },
+      bins: { required: false, label: 'Number of Bins', description: 'Number of histogram bins (default: 20)', allowedTypes: ['continuous'] }
     },
     boxplot: {
       xAxis: { required: true, label: 'Variable', description: 'Variable for box plot', allowedTypes: ['continuous'] },
       color: { required: false, label: 'Group By', description: 'Group boxes by category', allowedTypes: ['categorical', 'binary'] }
     },
     correlation: {
-      series: { required: true, label: 'Variables', description: 'Variables for correlation matrix', allowedTypes: ['continuous'] }
+      variables: { required: true, label: 'Variables', description: 'Select multiple variables for correlation matrix', allowedTypes: ['continuous'] }
     }
   };
 

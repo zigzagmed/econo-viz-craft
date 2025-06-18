@@ -8,6 +8,8 @@ interface VariableRoles {
   size?: string;
   series?: string;
   groupBy?: string;
+  bins?: string;
+  variables?: string[];
 }
 
 export const useChartConfig = (variableRoles: VariableRoles, chartType: string) => {
@@ -19,7 +21,8 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
     customColors: undefined as string[] | undefined,
     showStats: true,
     showTrendLine: false,
-    colorVariable: undefined as string | undefined
+    colorVariable: undefined as string | undefined,
+    histogramBins: 20
   });
 
   const generateDynamicConfig = (roles: VariableRoles, type: string) => {

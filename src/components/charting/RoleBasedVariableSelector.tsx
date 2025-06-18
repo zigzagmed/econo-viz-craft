@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database } from 'lucide-react';
 import { getChartRoleRequirements } from './utils/chartRoleRequirements';
 import { RoleSelector } from './components/RoleSelector';
+import { MultipleVariableSelector } from './components/MultipleVariableSelector';
 import { ValidationAlerts } from './components/ValidationAlerts';
 import { RoleBasedVariableSelectorProps, VariableRoles } from './types/variableTypes';
 
@@ -54,8 +56,25 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
     onRolesChange(newRoles);
   };
 
+  const handleMultipleVariablesChange = (role: string, variables: string[]) => {
+    const newRoles = { ...variableRoles };
+    if (variables.length === 0) {
+      delete newRoles[role as keyof VariableRoles];
+    } else {
+      (newRoles as any)[role] = variables;
+    }
+
+    onRolesChange(newRoles);
+  };
+
   const requiredRoles = roleKeys.filter(role => roleRequirements[role].required);
-  const missingRequiredRoles = requiredRoles.filter(role => !variableRoles[role as keyof VariableRoles]);
+  const missingRequiredRoles = requiredRoles.filter(role => {
+    const roleValue = variableRoles[role as keyof VariableRoles];
+    if (role === 'variables') {
+      return !roleValue || (Array.isArray(roleValue) && roleValue.length === 0);
+    }
+    return !roleValue;
+  });
 
   return (
     <Card>
@@ -78,7 +97,24 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
           {roleKeys.map((role) => {
             const requirement = roleRequirements[role];
             const filteredVariables = getFilteredVariables(requirement.allowedTypes);
-            const selectedVariable = variableRoles[role as keyof VariableRoles];
+
+            // Handle multiple variable selection for correlation
+            if (role === 'variables') {
+              const selectedVariables = variableRoles.variables || [];
+              return (
+                <MultipleVariableSelector
+                  key={role}
+                  role={role}
+                  requirement={requirement}
+                  selectedVariables={selectedVariables}
+                  filteredVariables={filteredVariables}
+                  disabled={false}
+                  onVariablesChange={handleMultipleVariablesChange}
+                />
+              );
+            }
+
+            const selectedVariable = variableRoles[role as keyof VariableRoles] as string;
 
             return (
               <RoleSelector

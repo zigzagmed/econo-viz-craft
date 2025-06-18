@@ -7,6 +7,7 @@ interface VariableRoles {
   size?: string;
   series?: string;
   groupBy?: string;
+  variables?: string[];
 }
 
 const colorSchemes = {
@@ -50,7 +51,7 @@ export const generateChartConfig = (
     case 'regression':
       return generateScatterChart(data, variableRoles, config, colors, baseOption, chartType === 'regression');
     case 'histogram':
-      return generateHistogram(data, variableRoles.xAxis!, config, colors, baseOption);
+      return generateHistogram(data, variableRoles, config, colors, baseOption);
     case 'boxplot':
       return generateBoxPlot(data, variableRoles, config, colors, baseOption);
     case 'correlation':
@@ -339,11 +340,12 @@ const generateScatterChart = (data: any[], variableRoles: VariableRoles, config:
   }
 };
 
-const generateHistogram = (data: any[], variable: string, config: any, colors: string[], baseOption: any) => {
+const generateHistogram = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
+  const variable = variableRoles.xAxis!;
   const values = data.map(item => parseFloat(item[variable])).filter(val => !isNaN(val));
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const bins = 20;
+  const bins = config.histogramBins || 20;
   const binSize = (max - min) / bins;
   
   const histogram = new Array(bins).fill(0);
@@ -475,8 +477,24 @@ const generateBoxPlot = (data: any[], variableRoles: VariableRoles, config: any,
 };
 
 const generateCorrelationMatrix = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
-  // For correlation, we need to get all continuous variables or use series if specified
-  const variables = variableRoles.series ? [variableRoles.series] : Object.values(variableRoles).filter(Boolean) as string[];
+  // Use the selected variables array for correlation
+  const variables = variableRoles.variables || [];
+  
+  if (variables.length < 2) {
+    return {
+      ...baseOption,
+      title: {
+        text: 'Select at least 2 variables for correlation matrix',
+        left: 'center',
+        top: 'middle',
+        textStyle: {
+          fontSize: 16,
+          color: '#999'
+        }
+      }
+    };
+  }
+  
   const correlationData = [];
   
   for (let i = 0; i < variables.length; i++) {

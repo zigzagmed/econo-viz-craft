@@ -13,6 +13,8 @@ export interface VariableRoles {
   size?: string;
   series?: string;
   groupBy?: string;
+  bins?: string;
+  variables?: string[];
 }
 
 export interface ChartRoleRequirements {
@@ -21,6 +23,7 @@ export interface ChartRoleRequirements {
     label: string;
     description: string;
     allowedTypes: ('continuous' | 'categorical' | 'binary')[];
+    multiple?: boolean;
   };
 }
 
