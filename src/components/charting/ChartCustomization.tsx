@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -104,28 +103,6 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
 
   return (
     <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-      {/* Selected Variables Section - At the top */}
-      {selectedVariables.length > 0 && (
-        <>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Selected Variables</Label>
-            <div className="space-y-1">
-              {selectedVariables.map((variable, index) => (
-                <div key={variable} className="text-xs bg-gray-100 p-2 rounded">
-                  {index === 0 ? 'X-axis: ' : index === 1 ? 'Y-axis: ' : 'Series: '}{variable}
-                </div>
-              ))}
-              {localConfig.colorVariable && (
-                <div className="text-xs bg-blue-100 p-2 rounded">
-                  Color: {localConfig.colorVariable}
-                </div>
-              )}
-            </div>
-          </div>
-          <Separator />
-        </>
-      )}
-
       <div className="space-y-2">
         <Label className="text-sm font-medium">Chart Title</Label>
         <Input

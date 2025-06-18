@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { ChartHeader } from './charting/ChartHeader';
 import { ChartTypeSelectionCard } from './charting/ChartTypeSelectionCard';
 import { VariableSelectionCard } from './charting/VariableSelectionCard';
+import { SelectedVariablesDisplay } from './charting/SelectedVariablesDisplay';
 import { ChartDisplay } from './charting/ChartDisplay';
 import { useChartingData } from '../hooks/useChartingData';
 import { useChartConfig } from '../hooks/useChartConfig';
@@ -63,6 +65,14 @@ export const ChartingTool = () => {
                 onVariablesChange={setSelectedVariables}
                 getDatasetInfo={getDatasetInfo}
                 requirements={requirements}
+              />
+            )}
+
+            {selectedVariables.length > 0 && (
+              <SelectedVariablesDisplay
+                selectedVariables={selectedVariables}
+                chartType={chartType}
+                colorVariable={chartConfig.colorVariable}
               />
             )}
           </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { calculateStatistics } from '../utils/statisticalUtils';
@@ -58,7 +57,8 @@ export const useECharts = (
       hasChartInstance: !!chartInstanceRef.current,
       selectedVariables,
       chartType,
-      variableCount: selectedVariables.length
+      variableCount: selectedVariables.length,
+      colorVariable: chartConfig.colorVariable
     });
     
     if (!chartInstanceRef.current || chartInstanceRef.current.isDisposed()) {
@@ -85,10 +85,21 @@ export const useECharts = (
       return;
     }
 
-    console.log('Updating chart with:', { selectedVariables, chartType });
+    console.log('Updating chart with:', { 
+      selectedVariables, 
+      chartType, 
+      colorVariable: chartConfig.colorVariable 
+    });
     
     try {
-      const data = getVariableData(selectedDataset, selectedVariables);
+      // Include color variable in data fetching if it exists
+      const variablesToFetch = [...selectedVariables];
+      if (chartConfig.colorVariable && !variablesToFetch.includes(chartConfig.colorVariable)) {
+        variablesToFetch.push(chartConfig.colorVariable);
+      }
+      
+      console.log('Fetching data for variables:', variablesToFetch);
+      const data = getVariableData(selectedDataset, variablesToFetch);
       console.log('Retrieved data sample:', data?.slice(0, 3));
       
       if (!data || data.length === 0) {
