@@ -42,9 +42,6 @@ export const ChartTypeSelector: React.FC<ChartTypeProps> = ({
             <div className="flex-1 text-left">
               <div className="font-medium">{chart.name}</div>
               <div className="text-xs text-gray-600 mt-1">{chart.description}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                Requires {chart.minVars === chart.maxVars ? chart.minVars : `${chart.minVars}-${chart.maxVars}`} variable{chart.maxVars > 1 ? 's' : ''}
-              </div>
             </div>
           </Button>
         );
