@@ -55,18 +55,21 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({
         <label className="text-sm font-medium">{requirement.label}</label>
         <HoverCard>
           <HoverCardTrigger asChild>
-            <div className="relative cursor-help">
-              <Info className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-              {requirement.required && (
-                <Badge variant="secondary" className="absolute -top-1 -right-1 text-xs px-1 py-0 h-4 min-w-0 bg-orange-100 text-orange-700 border-orange-200">
-                  !
-                </Badge>
-              )}
-            </div>
+            <Info className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
           </HoverCardTrigger>
           <HoverCardContent className="w-80">
             <div className="space-y-2">
               <p className="text-sm">{getRoleDescription(role, requirement.allowedTypes)}</p>
+              <div className="space-y-1">
+                <p className="text-xs text-gray-600">Accepted data types:</p>
+                <div className="flex gap-1">
+                  {requirement.allowedTypes.map(type => (
+                    <Badge key={type} className={`text-xs ${getTypeColor(type)}`}>
+                      {type}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
               {requirement.required && (
                 <div className="pt-2 border-t">
                   <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700 border-orange-200">Required Field</Badge>
