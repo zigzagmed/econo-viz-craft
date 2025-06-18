@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyChartState } from './EmptyChartState';
@@ -6,12 +7,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ChartCustomization } from './ChartCustomization';
 import { Download, Settings } from 'lucide-react';
 
+interface VariableRoles {
+  xAxis?: string;
+  yAxis?: string;
+  color?: string;
+  size?: string;
+  series?: string;
+}
+
 interface ChartDisplayProps {
   canShowChart: boolean;
   chartTitle: string;
   chartRef: React.RefObject<HTMLDivElement>;
   selectedDataset: string;
-  selectedVariables: string[];
+  variableRoles: VariableRoles;
   chartType: string;
   chartConfig: any;
   customizationOpen: boolean;
@@ -27,7 +36,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
   chartTitle,
   chartRef,
   selectedDataset,
-  selectedVariables,
+  variableRoles,
   chartType,
   chartConfig,
   onConfigChange,
@@ -43,6 +52,9 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
   // Get available variables from dataset info
   const datasetInfo = getDatasetInfo ? getDatasetInfo(selectedDataset) : null;
   const availableVariables = datasetInfo?.variables?.map((v: any) => v.name) || [];
+  
+  // Convert variableRoles to selectedVariables array for compatibility
+  const selectedVariables = Object.values(variableRoles).filter(Boolean) as string[];
 
   return (
     <Card>
