@@ -56,49 +56,100 @@ export const generateChartConfig = (
 const generateBarChart = (data: any[], variables: string[], config: any, colors: string[], baseOption: any) => {
   const xVar = variables[0];
   const yVar = variables[1] || variables[0];
+  const colorVar = config.colorVariable;
   
   // Aggregate data for categorical x-axis
   const aggregated = data.reduce((acc, item) => {
     const key = item[xVar];
+    const colorKey = colorVar ? item[colorVar] : 'default';
+    
     if (!acc[key]) {
-      acc[key] = { count: 0, sum: 0 };
+      acc[key] = {};
     }
-    acc[key].count += 1;
-    acc[key].sum += parseFloat(item[yVar]) || 0;
+    if (!acc[key][colorKey]) {
+      acc[key][colorKey] = { count: 0, sum: 0 };
+    }
+    acc[key][colorKey].count += 1;
+    acc[key][colorKey].sum += parseFloat(item[yVar]) || 0;
     return acc;
   }, {});
 
   const categories = Object.keys(aggregated);
-  const values = categories.map(key => 
-    variables.length === 1 ? aggregated[key].count : aggregated[key].sum / aggregated[key].count
-  );
-
-  return {
-    ...baseOption,
-    xAxis: {
-      type: 'category',
-      data: categories,
-      name: config.xAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 30
-    },
-    yAxis: {
-      type: 'value',
-      name: config.yAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 50
-    },
-    series: [{
-      data: values,
+  
+  if (colorVar) {
+    // Get unique color values
+    const colorValues = [...new Set(data.map(item => item[colorVar]))];
+    
+    const series = colorValues.map((colorValue, colorIndex) => ({
+      name: colorValue,
       type: 'bar',
+      data: categories.map(category => {
+        const categoryData = aggregated[category][colorValue];
+        if (!categoryData) return 0;
+        return variables.length === 1 ? categoryData.count : categoryData.sum / categoryData.count;
+      }),
       itemStyle: {
-        color: colors[0]
+        color: colors[colorIndex % colors.length]
       }
-    }],
-    tooltip: {
-      trigger: 'axis'
-    }
-  };
+    }));
+
+    return {
+      ...baseOption,
+      xAxis: {
+        type: 'category',
+        data: categories,
+        name: config.xAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 30
+      },
+      yAxis: {
+        type: 'value',
+        name: config.yAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 50
+      },
+      series,
+      legend: {
+        top: 30
+      },
+      tooltip: {
+        trigger: 'axis'
+      }
+    };
+  } else {
+    // Original single-color bar chart logic
+    const values = categories.map(key => {
+      const categoryData = Object.values(aggregated[key] as any)[0] as any;
+      return variables.length === 1 ? categoryData.count : categoryData.sum / categoryData.count;
+    });
+
+    return {
+      ...baseOption,
+      xAxis: {
+        type: 'category',
+        data: categories,
+        name: config.xAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 30
+      },
+      yAxis: {
+        type: 'value',
+        name: config.yAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 50
+      },
+      series: [{
+        data: values,
+        type: 'bar',
+        itemStyle: {
+          color: colors[0]
+        }
+      }],
+      tooltip: {
+        trigger: 'axis'
+      }
+    };
+  }
 };
 
 const generateLineChart = (data: any[], variables: string[], config: any, colors: string[], baseOption: any) => {
@@ -139,62 +190,106 @@ const generateLineChart = (data: any[], variables: string[], config: any, colors
 const generateScatterChart = (data: any[], variables: string[], config: any, colors: string[], baseOption: any, showRegression: boolean) => {
   const xVar = variables[0];
   const yVar = variables[1];
+  const colorVar = config.colorVariable;
   
-  const scatterData = data.map(item => [item[xVar], item[yVar]]);
-  
-  const series = [{
-    data: scatterData,
-    type: 'scatter',
-    itemStyle: {
-      color: colors[0]
-    }
-  }];
-
-  if (showRegression && config.showTrendLine) {
-    const xValues = data.map(item => parseFloat(item[xVar]));
-    const yValues = data.map(item => parseFloat(item[yVar]));
-    const regression = calculateRegression(xValues, yValues);
+  if (colorVar) {
+    // Group data by color variable
+    const colorValues = [...new Set(data.map(item => item[colorVar]))];
     
-    const minX = Math.min(...xValues);
-    const maxX = Math.max(...xValues);
-    const lineData = [
-      [minX, regression.slope * minX + regression.intercept],
-      [maxX, regression.slope * maxX + regression.intercept]
-    ];
+    const series = colorValues.map((colorValue, colorIndex) => {
+      const filteredData = data.filter(item => item[colorVar] === colorValue);
+      const scatterData = filteredData.map(item => [item[xVar], item[yVar]]);
+      
+      return {
+        name: colorValue,
+        data: scatterData,
+        type: 'scatter',
+        itemStyle: {
+          color: colors[colorIndex % colors.length]
+        }
+      };
+    });
 
-    series.push({
-      data: lineData,
-      type: 'line',
-      smooth: false,
+    return {
+      ...baseOption,
+      xAxis: {
+        type: 'value',
+        name: config.xAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 30
+      },
+      yAxis: {
+        type: 'value',
+        name: config.yAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 50
+      },
+      series,
+      legend: {
+        top: 30
+      },
+      tooltip: {
+        trigger: 'item'
+      }
+    };
+  } else {
+    // Original single-color scatter chart logic
+    const scatterData = data.map(item => [item[xVar], item[yVar]]);
+    
+    const series = [{
+      data: scatterData,
+      type: 'scatter',
       itemStyle: {
-        color: colors[1] || colors[0]
-      },
-      lineStyle: {
-        type: 'dashed'
-      },
-      symbol: 'none'
-    } as any);
-  }
+        color: colors[0]
+      }
+    }];
 
-  return {
-    ...baseOption,
-    xAxis: {
-      type: 'value',
-      name: config.xAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 30
-    },
-    yAxis: {
-      type: 'value',
-      name: config.yAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 50
-    },
-    series,
-    tooltip: {
-      trigger: 'item'
+    if (showRegression && config.showTrendLine) {
+      const xValues = data.map(item => parseFloat(item[xVar]));
+      const yValues = data.map(item => parseFloat(item[yVar]));
+      const regression = calculateRegression(xValues, yValues);
+      
+      const minX = Math.min(...xValues);
+      const maxX = Math.max(...xValues);
+      const lineData = [
+        [minX, regression.slope * minX + regression.intercept],
+        [maxX, regression.slope * maxX + regression.intercept]
+      ];
+
+      series.push({
+        data: lineData,
+        type: 'line',
+        smooth: false,
+        itemStyle: {
+          color: colors[1] || colors[0]
+        },
+        lineStyle: {
+          type: 'dashed'
+        },
+        symbol: 'none'
+      } as any);
     }
-  };
+
+    return {
+      ...baseOption,
+      xAxis: {
+        type: 'value',
+        name: config.xAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 30
+      },
+      yAxis: {
+        type: 'value',
+        name: config.yAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 50
+      },
+      series,
+      tooltip: {
+        trigger: 'item'
+      }
+    };
+  }
 };
 
 const generateHistogram = (data: any[], variable: string, config: any, colors: string[], baseOption: any) => {

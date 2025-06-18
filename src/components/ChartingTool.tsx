@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ChartHeader } from './charting/ChartHeader';
 import { ChartTypeSelectionCard } from './charting/ChartTypeSelectionCard';
@@ -83,6 +82,7 @@ export const ChartingTool = () => {
               onConfigChange={setChartConfig}
               onExportChart={handleExportChart}
               getVariableData={getVariableData}
+              getDatasetInfo={getDatasetInfo}
             />
           </div>
         </div>

@@ -9,7 +9,8 @@ export const useChartConfig = (selectedVariables: string[], chartType: string) =
     colorScheme: 'academic',
     customColors: undefined as string[] | undefined,
     showStats: true,
-    showTrendLine: false
+    showTrendLine: false,
+    colorVariable: undefined as string | undefined
   });
 
   const generateDynamicConfig = (variables: string[], type: string) => {

@@ -20,6 +20,7 @@ interface ChartDisplayProps {
   onConfigChange: (config: any) => void;
   onExportChart: (format: 'png' | 'svg') => void;
   getVariableData: (dataset: string, variables: string[]) => any;
+  getDatasetInfo?: (dataset: string) => any;
 }
 
 export const ChartDisplay: React.FC<ChartDisplayProps> = ({
@@ -32,12 +33,17 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
   chartConfig,
   onConfigChange,
   onExportChart,
-  getVariableData
+  getVariableData,
+  getDatasetInfo
 }) => {
   const [customizationOpen, setCustomizationOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
   console.log('ChartDisplay render:', { canShowChart, chartTitle });
+
+  // Get available variables from dataset info
+  const datasetInfo = getDatasetInfo ? getDatasetInfo(selectedDataset) : null;
+  const availableVariables = datasetInfo?.variables?.map((v: any) => v.name) || [];
 
   return (
     <Card>
@@ -64,6 +70,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
                     onConfigChange={onConfigChange}
                     chartType={chartType}
                     selectedVariables={selectedVariables}
+                    availableVariables={availableVariables}
                   />
                 </DialogContent>
               </Dialog>

@@ -17,17 +17,20 @@ interface ChartCustomizationProps {
     customColors?: string[];
     showStats: boolean;
     showTrendLine: boolean;
+    colorVariable?: string;
   };
   onConfigChange: (config: any) => void;
   chartType: string;
   selectedVariables: string[];
+  availableVariables?: string[];
 }
 
 export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   config,
   onConfigChange,
   chartType,
-  selectedVariables
+  selectedVariables,
+  availableVariables = []
 }) => {
   const [showCustomColors, setShowCustomColors] = useState(config.colorScheme === 'custom');
   const [customColors, setCustomColors] = useState(config.customColors || ['#2563eb', '#dc2626', '#16a34a']);
@@ -78,6 +81,12 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
 
   const showTrendLineOption = ['scatter', 'regression', 'line'].includes(chartType);
   const showStatsOption = !['pie'].includes(chartType);
+  const showColorVariable = ['bar', 'scatter', 'line'].includes(chartType);
+
+  // Get available variables for color mapping (excluding already selected ones)
+  const colorVariableOptions = availableVariables.filter(variable => 
+    !selectedVariables.includes(variable)
+  );
 
   return (
     <div className="space-y-4">
@@ -109,6 +118,36 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
       </div>
 
       <Separator />
+
+      {showColorVariable && colorVariableOptions.length > 0 && (
+        <>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Color Variable</Label>
+            <Select 
+              value={config.colorVariable || ''} 
+              onValueChange={(value) => updateConfig('colorVariable', value || undefined)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select variable for coloring (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                {colorVariableOptions.map((variable) => (
+                  <SelectItem key={variable} value={variable}>
+                    {variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {config.colorVariable && (
+              <p className="text-xs text-gray-500">
+                Chart elements will be colored based on {config.colorVariable} values
+              </p>
+            )}
+          </div>
+          <Separator />
+        </>
+      )}
 
       <div className="space-y-2">
         <Label className="text-sm font-medium">Color Scheme</Label>
@@ -216,6 +255,11 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
                   {index === 0 ? 'X-axis: ' : index === 1 ? 'Y-axis: ' : 'Series: '}{variable}
                 </div>
               ))}
+              {config.colorVariable && (
+                <div className="text-xs bg-blue-100 p-2 rounded">
+                  Color: {config.colorVariable}
+                </div>
+              )}
             </div>
           </div>
         </>
