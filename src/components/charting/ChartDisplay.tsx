@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyChartState } from './EmptyChartState';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,8 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
   chartRef,
   onExportChart
 }) => {
+  console.log('ChartDisplay render:', { canShowChart, chartTitle });
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -59,15 +61,16 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
         {!canShowChart ? (
           <EmptyChartState />
         ) : (
-          <div 
-            ref={chartRef} 
-            className="w-full border border-gray-200 rounded-lg bg-white"
-            style={{ 
-              height: '500px', 
-              minHeight: '500px',
-              position: 'relative'
-            }}
-          />
+          <div className="w-full">
+            <div 
+              ref={chartRef} 
+              className="w-full border border-gray-200 rounded-lg bg-white"
+              style={{ 
+                height: '500px', 
+                minHeight: '500px'
+              }}
+            />
+          </div>
         )}
       </CardContent>
     </Card>
