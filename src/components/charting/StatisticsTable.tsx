@@ -29,28 +29,40 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
     return null;
   }
 
+  // Split entries into two rows
+  const midPoint = Math.ceil(statEntries.length / 2);
+  const firstRow = statEntries.slice(0, midPoint);
+  const secondRow = statEntries.slice(midPoint);
+
   return (
-    <Card className="mt-4 w-fit max-w-md">
+    <Card className="mt-4 w-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Chart Statistics</CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs font-medium py-2">Statistic</TableHead>
-              <TableHead className="text-xs font-medium py-2">Value</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {statEntries.map(([statName, statData]) => (
-              <TableRow key={statName}>
-                <TableCell className="font-medium text-xs py-2">{statName}</TableCell>
-                <TableCell className="text-xs py-2">{formatValue(statData.value)}</TableCell>
-              </TableRow>
+        <div className="space-y-3">
+          {/* First row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {firstRow.map(([statName, statData]) => (
+              <div key={statName} className="text-center">
+                <div className="text-xs text-gray-600 mb-1">{statName}</div>
+                <div className="text-sm font-medium">{formatValue(statData.value)}</div>
+              </div>
             ))}
-          </TableBody>
-        </Table>
+          </div>
+          
+          {/* Second row if needed */}
+          {secondRow.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {secondRow.map(([statName, statData]) => (
+                <div key={statName} className="text-center">
+                  <div className="text-xs text-gray-600 mb-1">{statName}</div>
+                  <div className="text-sm font-medium">{formatValue(statData.value)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

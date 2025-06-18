@@ -1,4 +1,3 @@
-
 import { getColorPalette } from './colorUtils';
 import { calculateCorrelation } from './correlationUtils';
 
@@ -11,6 +10,7 @@ interface VariableRoles {
   groupBy?: string;
   bins?: string;
   variables?: string[];
+  statistic?: string;
 }
 
 export const generateChartConfig = (
@@ -37,11 +37,11 @@ export const generateChartConfig = (
     }
   };
 
-  // Common axis label configuration with custom distances
+  // Common axis label configuration with custom distances (reduced Y-axis distance)
   const getAxisLabelConfig = (label: string, isVertical: boolean) => ({
     name: label,
     nameLocation: 'middle',
-    nameGap: isVertical ? (chartConfig.yAxisLabelDistance || 50) : (chartConfig.xAxisLabelDistance || 30),
+    nameGap: isVertical ? (chartConfig.yAxisLabelDistance || 35) : (chartConfig.xAxisLabelDistance || 30),
     nameTextStyle: {
       fontSize: 14,
       fontWeight: 'normal'
@@ -166,21 +166,54 @@ const generateLineConfig = (data: any[], variableRoles: VariableRoles, chartConf
 };
 
 const generateBarConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[]) => {
-  if (!variableRoles.xAxis) return {};
+  if (!variableRoles.xAxis || !variableRoles.yAxis || !variableRoles.statistic) return {};
   
-  const barData = data.reduce((acc, item) => {
-    const key = item[variableRoles.xAxis!];
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(item);
+  // Group data by X variable and calculate the selected statistic for Y
+  const groupedData = data.reduce((acc, item) => {
+    const xValue = item[variableRoles.xAxis!];
+    const yValue = item[variableRoles.yAxis!];
+    
+    if (!acc[xValue]) {
+      acc[xValue] = [];
+    }
+    if (yValue !== null && yValue !== undefined) {
+      acc[xValue].push(yValue);
+    }
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, number[]>);
 
-  const categories = Object.keys(barData);
-  const barValues = categories.map(cat => barData[cat].length);
+  const categories = Object.keys(groupedData);
+  const barValues = categories.map(category => {
+    const values = groupedData[category];
+    if (values.length === 0) return 0;
+    
+    switch (variableRoles.statistic) {
+      case 'sum':
+        return values.reduce((sum, val) => sum + val, 0);
+      case 'average':
+        return values.reduce((sum, val) => sum + val, 0) / values.length;
+      case 'count':
+        return values.length;
+      case 'min':
+        return Math.min(...values);
+      case 'max':
+        return Math.max(...values);
+      default:
+        return values.length; // Default to count
+    }
+  });
 
   return {
     title: titleConfig,
-    tooltip: { trigger: 'axis' },
+    tooltip: { 
+      trigger: 'axis',
+      formatter: (params: any) => {
+        const category = params[0].name;
+        const value = params[0].value;
+        const statLabel = variableRoles.statistic?.charAt(0).toUpperCase() + variableRoles.statistic?.slice(1);
+        return `${category}<br/>${statLabel} of ${variableRoles.yAxis}: ${value}`;
+      }
+    },
     xAxis: {
       type: 'category',
       data: categories,

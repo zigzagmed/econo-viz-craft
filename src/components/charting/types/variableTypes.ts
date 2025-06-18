@@ -15,6 +15,8 @@ export interface VariableRoles {
   groupBy?: string;
   bins?: string;
   variables?: string[];
+  histogramBins?: number;
+  statistic?: string;
 }
 
 export interface ChartRoleRequirements {

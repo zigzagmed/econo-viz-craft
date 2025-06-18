@@ -6,6 +6,7 @@ import { getChartRoleRequirements } from './utils/chartRoleRequirements';
 import { RoleSelector } from './components/RoleSelector';
 import { MultipleVariableSelector } from './components/MultipleVariableSelector';
 import { HistogramBinsSelector } from './components/HistogramBinsSelector';
+import { StatisticSelector } from './components/StatisticSelector';
 import { ValidationAlerts } from './components/ValidationAlerts';
 import { RoleBasedVariableSelectorProps, VariableRoles } from './types/variableTypes';
 
@@ -74,6 +75,16 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
     onRolesChange(newRoles);
   };
 
+  const handleStatisticChange = (statistic: string | undefined) => {
+    const newRoles = { ...variableRoles };
+    if (statistic) {
+      newRoles.statistic = statistic;
+    } else {
+      delete newRoles.statistic;
+    }
+    onRolesChange(newRoles);
+  };
+
   const requiredRoles = roleKeys.filter(role => roleRequirements[role].required);
   const missingRequiredRoles = requiredRoles.filter(role => {
     const roleValue = variableRoles[role as keyof VariableRoles];
@@ -104,6 +115,17 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
           {roleKeys.map((role) => {
             const requirement = roleRequirements[role];
             const filteredVariables = getFilteredVariables(requirement.allowedTypes);
+
+            // Handle statistic selection for bar charts
+            if (role === 'statistic') {
+              return (
+                <StatisticSelector
+                  key={role}
+                  selectedStatistic={variableRoles.statistic}
+                  onStatisticChange={handleStatisticChange}
+                />
+              );
+            }
 
             // Handle multiple variable selection for correlation
             if (role === 'variables') {

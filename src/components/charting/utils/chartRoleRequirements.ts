@@ -16,25 +16,25 @@ export const getChartRoleRequirements = (chartType: string): ChartRoleRequiremen
       required: true,
       label: 'X-Axis Variable',
       description: 'Variable for the horizontal axis',
-      allowedTypes: ['continuous', 'categorical', 'binary'] as const
+      allowedTypes: ['continuous', 'categorical', 'binary']
     },
     yAxis: {
       required: true,
       label: 'Y-Axis Variable', 
       description: 'Variable for the vertical axis',
-      allowedTypes: ['continuous'] as const
+      allowedTypes: ['continuous']
     },
     color: {
       required: false,
       label: 'Color Variable',
       description: 'Variable to color-code data points',
-      allowedTypes: ['categorical', 'binary'] as const
+      allowedTypes: ['categorical', 'binary']
     },
     size: {
       required: false,
       label: 'Size Variable',
       description: 'Variable to size data points',
-      allowedTypes: ['continuous'] as const
+      allowedTypes: ['continuous']
     }
   };
 
@@ -64,6 +64,12 @@ export const getChartRoleRequirements = (chartType: string): ChartRoleRequiremen
       return {
         xAxis: { ...commonRoles.xAxis, allowedTypes: ['categorical', 'binary'] },
         yAxis: commonRoles.yAxis,
+        statistic: {
+          required: true,
+          label: 'Select Statistic',
+          description: 'Statistical operation to apply to Y values',
+          allowedTypes: ['continuous', 'categorical', 'binary']
+        },
         color: commonRoles.color
       };
 

@@ -15,6 +15,7 @@ interface VariableRoles {
   size?: string;
   series?: string;
   histogramBins?: number;
+  statistic?: string;
 }
 
 export const ChartingTool = () => {
