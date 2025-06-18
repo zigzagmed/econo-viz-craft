@@ -31,6 +31,10 @@ export const generateChartStatistics = (
 ): Record<string, any> => {
   const stats: Record<string, any> = {};
 
+  // Helper function to format variable names
+  const formatVariableName = (variable: string) => 
+    variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
   switch (chartType) {
     case 'bar':
       if (variableRoles.xAxis && variableRoles.yAxis && variableRoles.statistic) {
@@ -45,7 +49,11 @@ export const generateChartStatistics = (
           return acc;
         }, {} as Record<string, number[]>);
 
-        // Calculate statistic for each category
+        const statisticLabel = variableRoles.statistic.charAt(0).toUpperCase() + variableRoles.statistic.slice(1);
+        const yAxisLabel = formatVariableName(variableRoles.yAxis);
+        const xAxisLabel = formatVariableName(variableRoles.xAxis);
+
+        // Calculate statistic for each category and format descriptively
         Object.entries(grouped).forEach(([category, values]) => {
           if (isArray(values) && values.length > 0 && values.every(isNumber)) {
             const numericValues = values as number[];
@@ -69,7 +77,10 @@ export const generateChartStatistics = (
               default:
                 result = numericValues.length;
             }
-            stats[category] = { value: result };
+            
+            // Create descriptive label
+            const formattedResult = Number.isInteger(result) ? result.toString() : result.toFixed(2);
+            stats[`${statisticLabel} ${yAxisLabel} for ${category}`] = { value: formattedResult };
           }
         });
       }
@@ -81,12 +92,15 @@ export const generateChartStatistics = (
         const xValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null && isNumber(v)) as number[];
         const yValues = data.map(d => d[variableRoles.yAxis!]).filter(v => v != null && isNumber(v)) as number[];
         
-        stats['Sample Size'] = { value: Math.min(xValues.length, yValues.length) };
-        stats['Correlation'] = { value: calculateCorrelation(xValues, yValues) };
+        const xAxisLabel = formatVariableName(variableRoles.xAxis);
+        const yAxisLabel = formatVariableName(variableRoles.yAxis);
+        
+        stats[`Sample Size (${xAxisLabel} vs ${yAxisLabel})`] = { value: Math.min(xValues.length, yValues.length) };
+        stats[`Correlation (${xAxisLabel} & ${yAxisLabel})`] = { value: calculateCorrelation(xValues, yValues) };
         
         if (chartType === 'regression') {
           const correlation = calculateCorrelation(xValues, yValues);
-          stats['R-squared'] = { value: correlation * correlation };
+          stats[`R-squared (${xAxisLabel} & ${yAxisLabel})`] = { value: correlation * correlation };
         }
       }
       break;
@@ -100,12 +114,14 @@ export const generateChartStatistics = (
           const binCount = chartConfig.histogramBins || 10;
           const binWidth = (histMax - histMin) / binCount;
           
+          const variableLabel = formatVariableName(variableRoles.xAxis);
+          
           // Create bins and count frequencies
           const bins: Record<string, number> = {};
           for (let i = 0; i < binCount; i++) {
             const binStart = histMin + i * binWidth;
             const binEnd = binStart + binWidth;
-            const binLabel = `${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
+            const binLabel = `${variableLabel} ${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
             bins[binLabel] = 0;
           }
           
@@ -114,12 +130,12 @@ export const generateChartStatistics = (
             const binIndex = Math.min(Math.floor((value - histMin) / binWidth), binCount - 1);
             const binStart = histMin + binIndex * binWidth;
             const binEnd = binStart + binWidth;
-            const binLabel = `${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
+            const binLabel = `${variableLabel} ${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
             bins[binLabel]++;
           });
           
           Object.entries(bins).forEach(([binLabel, count]) => {
-            stats[binLabel] = { value: count };
+            stats[`${binLabel} frequency`] = { value: count };
           });
         }
       }
@@ -135,15 +151,17 @@ export const generateChartStatistics = (
           return acc;
         }, {} as Record<string, number>);
         
-        const total = Object.values(pieData).reduce((sum: number, count: number) => {
-          return sum + count;
+        const total = Object.values(pieData).reduce((sum: number, count: unknown) => {
+          return sum + (count as number);
         }, 0);
+        
+        const variableLabel = formatVariableName(variableRoles.xAxis);
         
         Object.entries(pieData).forEach(([category, count]) => {
           const numericCount = count as number;
           const numericTotal = total as number;
           const percentage = (numericCount / numericTotal) * 100;
-          stats[category] = { value: `${numericCount} (${percentage.toFixed(1)}%)` };
+          stats[`${variableLabel} ${category} count`] = { value: `${numericCount} (${percentage.toFixed(1)}%)` };
         });
       }
       break;
@@ -160,12 +178,14 @@ export const generateChartStatistics = (
           const q3 = boxplotValues[Math.floor(boxplotValues.length * 0.75)];
           const iqr = q3 - q1;
           
-          stats['Q1'] = { value: q1 };
-          stats['Median'] = { value: median };
-          stats['Q3'] = { value: q3 };
-          stats['IQR'] = { value: iqr };
-          stats['Min'] = { value: boxplotValues[0] };
-          stats['Max'] = { value: boxplotValues[boxplotValues.length - 1] };
+          const variableLabel = formatVariableName(variableRoles.xAxis);
+          
+          stats[`${variableLabel} Q1`] = { value: q1 };
+          stats[`${variableLabel} Median`] = { value: median };
+          stats[`${variableLabel} Q3`] = { value: q3 };
+          stats[`${variableLabel} IQR`] = { value: iqr };
+          stats[`${variableLabel} Min`] = { value: boxplotValues[0] };
+          stats[`${variableLabel} Max`] = { value: boxplotValues[boxplotValues.length - 1] };
         }
       }
       break;
@@ -176,6 +196,9 @@ export const generateChartStatistics = (
         const yValues = data.map(d => d[variableRoles.yAxis!]).filter(v => v != null && isNumber(v)) as number[];
         const xValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null && isNumber(v)) as number[];
         
+        const xAxisLabel = formatVariableName(variableRoles.xAxis);
+        const yAxisLabel = formatVariableName(variableRoles.yAxis);
+        
         // Show first few and last few data points
         const sortedData = data
           .filter(d => d[variableRoles.xAxis!] != null && d[variableRoles.yAxis!] != null && 
@@ -183,10 +206,10 @@ export const generateChartStatistics = (
           .sort((a, b) => (a[variableRoles.xAxis!] as number) - (b[variableRoles.xAxis!] as number));
         
         if (sortedData.length > 0 && yValues.length > 0) {
-          stats['Start Value'] = { value: sortedData[0][variableRoles.yAxis!] };
-          stats['End Value'] = { value: sortedData[sortedData.length - 1][variableRoles.yAxis!] };
-          stats['Max Value'] = { value: Math.max(...yValues) };
-          stats['Min Value'] = { value: Math.min(...yValues) };
+          stats[`${yAxisLabel} start value`] = { value: sortedData[0][variableRoles.yAxis!] };
+          stats[`${yAxisLabel} end value`] = { value: sortedData[sortedData.length - 1][variableRoles.yAxis!] };
+          stats[`${yAxisLabel} maximum`] = { value: Math.max(...yValues) };
+          stats[`${yAxisLabel} minimum`] = { value: Math.min(...yValues) };
         }
       }
       break;
@@ -202,14 +225,17 @@ export const generateChartStatistics = (
             const values2 = data.map(d => d[variables[j]]).filter(v => v != null && isNumber(v)) as number[];
             const corr = calculateCorrelation(values1, values2);
             
-            stats[`${variables[i]} × ${variables[j]}`] = { value: corr };
+            const var1Label = formatVariableName(variables[i]);
+            const var2Label = formatVariableName(variables[j]);
+            
+            stats[`${var1Label} & ${var2Label} correlation`] = { value: corr };
           }
         }
       }
       break;
 
     default:
-      stats['Total Records'] = { value: data.length };
+      stats['Total records in dataset'] = { value: data.length };
       break;
   }
 

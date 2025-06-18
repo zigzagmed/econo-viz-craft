@@ -69,8 +69,7 @@ export const getChartRoleRequirements = (chartType: string): ChartRoleRequiremen
           label: 'Select Statistic',
           description: 'Statistical operation to apply to Y values',
           allowedTypes: ['continuous', 'categorical', 'binary'] as ('continuous' | 'categorical' | 'binary')[]
-        },
-        color: commonRoles.color
+        }
       };
 
     case 'histogram':
