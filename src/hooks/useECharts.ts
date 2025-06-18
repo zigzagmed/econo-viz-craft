@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { calculateStatistics } from '../utils/statisticalUtils';
@@ -8,7 +7,6 @@ interface VariableRoles {
   xAxis?: string;
   yAxis?: string;
   color?: string;
-  size?: string;
   series?: string;
 }
 

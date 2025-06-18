@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from 'react';
 
 interface VariableRoles {
   xAxis?: string;
   yAxis?: string;
   color?: string;
-  size?: string;
   series?: string;
   groupBy?: string;
   variables?: string[];

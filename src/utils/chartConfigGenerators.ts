@@ -13,7 +13,6 @@ interface VariableRoles {
   xAxis?: string;
   yAxis?: string;
   color?: string;
-  size?: string;
   series?: string;
   groupBy?: string;
   bins?: string;
