@@ -7,6 +7,7 @@ import { ChartCustomization } from './ChartCustomization';
 import { Download, Settings } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { StatisticsTable } from './StatisticsTable';
+import { calculateStatistics } from '../../utils/statisticalUtils';
 
 interface VariableRoles {
   xAxis?: string;

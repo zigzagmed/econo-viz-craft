@@ -1,3 +1,4 @@
+
 import * as echarts from 'echarts';
 
 interface VariableRoles {
@@ -177,7 +178,7 @@ export const generateChartConfig = (
       }, {} as Record<string, any[]>);
 
       const categories = Object.keys(barData);
-      const values = categories.map(cat => barData[cat].length);
+      const barValues = categories.map(cat => barData[cat].length);
 
       return {
         title: titleConfig,
@@ -193,7 +194,7 @@ export const generateChartConfig = (
         },
         series: [{
           type: 'bar',
-          data: values,
+          data: barValues,
           itemStyle: { color: colors[0] }
         }]
       };
@@ -201,20 +202,20 @@ export const generateChartConfig = (
     case 'histogram':
       if (!variableRoles.xAxis) return {};
       
-      const values = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
-      const min = Math.min(...values);
-      const max = Math.max(...values);
+      const histValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
+      const histMin = Math.min(...histValues);
+      const histMax = Math.max(...histValues);
       const binCount = chartConfig.histogramBins || 20;
-      const binWidth = (max - min) / binCount;
+      const binWidth = (histMax - histMin) / binCount;
       
       const bins = Array.from({ length: binCount }, (_, i) => ({
-        start: min + i * binWidth,
-        end: min + (i + 1) * binWidth,
+        start: histMin + i * binWidth,
+        end: histMin + (i + 1) * binWidth,
         count: 0
       }));
       
-      values.forEach(value => {
-        const binIndex = Math.min(Math.floor((value - min) / binWidth), binCount - 1);
+      histValues.forEach(value => {
+        const binIndex = Math.min(Math.floor((value - histMin) / binWidth), binCount - 1);
         bins[binIndex].count++;
       });
 
@@ -288,8 +289,8 @@ export const generateChartConfig = (
       const q1 = boxplotValues[Math.floor(boxplotValues.length * 0.25)];
       const median = boxplotValues[Math.floor(boxplotValues.length * 0.5)];
       const q3 = boxplotValues[Math.floor(boxplotValues.length * 0.75)];
-      const min = boxplotValues[0];
-      const max = boxplotValues[boxplotValues.length - 1];
+      const boxplotMin = boxplotValues[0];
+      const boxplotMax = boxplotValues[boxplotValues.length - 1];
 
       return {
         title: titleConfig,
@@ -305,7 +306,7 @@ export const generateChartConfig = (
         },
         series: [{
           type: 'boxplot',
-          data: [[min, q1, median, q3, max]],
+          data: [[boxplotMin, q1, median, q3, boxplotMax]],
           itemStyle: { color: colors[0] }
         }]
       };
