@@ -135,15 +135,13 @@ export const generateChartStatistics = (
           return acc;
         }, {} as Record<string, number>);
         
-        const total = Object.values(pieData).reduce((sum, count) => {
-          return sum + (isNumber(count) ? count : 0);
+        const total = Object.values(pieData).reduce((sum: number, count: number) => {
+          return sum + count;
         }, 0);
         
         Object.entries(pieData).forEach(([category, count]) => {
-          if (isNumber(count)) {
-            const percentage = (count / total) * 100;
-            stats[category] = { value: `${count} (${percentage.toFixed(1)}%)` };
-          }
+          const percentage = (count / total) * 100;
+          stats[category] = { value: `${count} (${percentage.toFixed(1)}%)` };
         });
       }
       break;
