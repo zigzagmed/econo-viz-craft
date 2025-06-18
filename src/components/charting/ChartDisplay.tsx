@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyChartState } from './EmptyChartState';
@@ -71,6 +70,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
                     chartType={chartType}
                     selectedVariables={selectedVariables}
                     availableVariables={availableVariables}
+                    onClose={() => setCustomizationOpen(false)}
                   />
                 </DialogContent>
               </Dialog>

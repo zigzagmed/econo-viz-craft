@@ -23,6 +23,7 @@ interface ChartCustomizationProps {
   chartType: string;
   selectedVariables: string[];
   availableVariables?: string[];
+  onClose?: () => void;
 }
 
 export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
@@ -30,13 +31,22 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   onConfigChange,
   chartType,
   selectedVariables,
-  availableVariables = []
+  availableVariables = [],
+  onClose
 }) => {
+  const [localConfig, setLocalConfig] = useState(config);
   const [showCustomColors, setShowCustomColors] = useState(config.colorScheme === 'custom');
   const [customColors, setCustomColors] = useState(config.customColors || ['#2563eb', '#dc2626', '#16a34a']);
 
-  const updateConfig = (key: string, value: any) => {
-    onConfigChange({ ...config, [key]: value });
+  const updateLocalConfig = (key: string, value: any) => {
+    setLocalConfig(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleApply = () => {
+    onConfigChange(localConfig);
+    if (onClose) {
+      onClose();
+    }
   };
 
   const colorSchemes = [
@@ -48,13 +58,13 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   ];
 
   const handleColorSchemeChange = (value: string) => {
-    updateConfig('colorScheme', value);
+    updateLocalConfig('colorScheme', value);
     setShowCustomColors(value === 'custom');
     
     if (value === 'custom') {
-      updateConfig('customColors', customColors);
+      updateLocalConfig('customColors', customColors);
     } else {
-      updateConfig('customColors', undefined);
+      updateLocalConfig('customColors', undefined);
     }
   };
 
@@ -62,20 +72,20 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
     const newColors = [...customColors];
     newColors[index] = color;
     setCustomColors(newColors);
-    updateConfig('customColors', newColors);
+    updateLocalConfig('customColors', newColors);
   };
 
   const addCustomColor = () => {
     const newColors = [...customColors, '#000000'];
     setCustomColors(newColors);
-    updateConfig('customColors', newColors);
+    updateLocalConfig('customColors', newColors);
   };
 
   const removeCustomColor = (index: number) => {
     if (customColors.length > 1) {
       const newColors = customColors.filter((_, i) => i !== index);
       setCustomColors(newColors);
-      updateConfig('customColors', newColors);
+      updateLocalConfig('customColors', newColors);
     }
   };
 
@@ -89,12 +99,34 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+      {/* Selected Variables Section - At the top */}
+      {selectedVariables.length > 0 && (
+        <>
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Selected Variables</Label>
+            <div className="space-y-1">
+              {selectedVariables.map((variable, index) => (
+                <div key={variable} className="text-xs bg-gray-100 p-2 rounded">
+                  {index === 0 ? 'X-axis: ' : index === 1 ? 'Y-axis: ' : 'Series: '}{variable}
+                </div>
+              ))}
+              {localConfig.colorVariable && (
+                <div className="text-xs bg-blue-100 p-2 rounded">
+                  Color: {localConfig.colorVariable}
+                </div>
+              )}
+            </div>
+          </div>
+          <Separator />
+        </>
+      )}
+
       <div className="space-y-2">
         <Label className="text-sm font-medium">Chart Title</Label>
         <Input
-          value={config.title}
-          onChange={(e) => updateConfig('title', e.target.value)}
+          value={localConfig.title}
+          onChange={(e) => updateLocalConfig('title', e.target.value)}
           placeholder="Enter chart title"
         />
       </div>
@@ -102,8 +134,8 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
       <div className="space-y-2">
         <Label className="text-sm font-medium">X-Axis Label</Label>
         <Input
-          value={config.xAxisLabel}
-          onChange={(e) => updateConfig('xAxisLabel', e.target.value)}
+          value={localConfig.xAxisLabel}
+          onChange={(e) => updateLocalConfig('xAxisLabel', e.target.value)}
           placeholder="X-axis label"
         />
       </div>
@@ -111,8 +143,8 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
       <div className="space-y-2">
         <Label className="text-sm font-medium">Y-Axis Label</Label>
         <Input
-          value={config.yAxisLabel}
-          onChange={(e) => updateConfig('yAxisLabel', e.target.value)}
+          value={localConfig.yAxisLabel}
+          onChange={(e) => updateLocalConfig('yAxisLabel', e.target.value)}
           placeholder="Y-axis label"
         />
       </div>
@@ -124,8 +156,8 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
           <div className="space-y-2">
             <Label className="text-sm font-medium">Color Variable</Label>
             <Select 
-              value={config.colorVariable || ''} 
-              onValueChange={(value) => updateConfig('colorVariable', value || undefined)}
+              value={localConfig.colorVariable || ''} 
+              onValueChange={(value) => updateLocalConfig('colorVariable', value || undefined)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select variable for coloring (optional)" />
@@ -139,9 +171,9 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            {config.colorVariable && (
+            {localConfig.colorVariable && (
               <p className="text-xs text-gray-500">
-                Chart elements will be colored based on {config.colorVariable} values
+                Chart elements will be colored based on {localConfig.colorVariable} values
               </p>
             )}
           </div>
@@ -151,7 +183,7 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
 
       <div className="space-y-2">
         <Label className="text-sm font-medium">Color Scheme</Label>
-        <Select value={config.colorScheme} onValueChange={handleColorSchemeChange}>
+        <Select value={localConfig.colorScheme} onValueChange={handleColorSchemeChange}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -225,8 +257,8 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
           <div className="flex items-center space-x-2">
             <Checkbox
               id="showStats"
-              checked={config.showStats}
-              onCheckedChange={(checked) => updateConfig('showStats', checked)}
+              checked={localConfig.showStats}
+              onCheckedChange={(checked) => updateLocalConfig('showStats', checked)}
             />
             <Label htmlFor="showStats" className="text-sm">Show Statistics</Label>
           </div>
@@ -236,34 +268,21 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
           <div className="flex items-center space-x-2">
             <Checkbox
               id="showTrendLine"
-              checked={config.showTrendLine}
-              onCheckedChange={(checked) => updateConfig('showTrendLine', checked)}
+              checked={localConfig.showTrendLine}
+              onCheckedChange={(checked) => updateLocalConfig('showTrendLine', checked)}
             />
             <Label htmlFor="showTrendLine" className="text-sm">Show Trend Line</Label>
           </div>
         )}
       </div>
 
-      {selectedVariables.length > 0 && (
-        <>
-          <Separator />
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Selected Variables</Label>
-            <div className="space-y-1">
-              {selectedVariables.map((variable, index) => (
-                <div key={variable} className="text-xs bg-gray-100 p-2 rounded">
-                  {index === 0 ? 'X-axis: ' : index === 1 ? 'Y-axis: ' : 'Series: '}{variable}
-                </div>
-              ))}
-              {config.colorVariable && (
-                <div className="text-xs bg-blue-100 p-2 rounded">
-                  Color: {config.colorVariable}
-                </div>
-              )}
-            </div>
-          </div>
-        </>
-      )}
+      {/* Apply Button - At the bottom */}
+      <Separator />
+      <div className="flex justify-end pt-2">
+        <Button onClick={handleApply} className="w-full">
+          Apply Changes
+        </Button>
+      </div>
     </div>
   );
 };
