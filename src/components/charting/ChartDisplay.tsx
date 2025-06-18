@@ -1,9 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyChartState } from './EmptyChartState';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ChartCustomization } from './ChartCustomization';
+import { Download, Settings } from 'lucide-react';
 
 interface ChartDisplayProps {
   canShowChart: boolean;
@@ -24,8 +26,17 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
   canShowChart,
   chartTitle,
   chartRef,
-  onExportChart
+  selectedDataset,
+  selectedVariables,
+  chartType,
+  chartConfig,
+  onConfigChange,
+  onExportChart,
+  getVariableData
 }) => {
+  const [customizationOpen, setCustomizationOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+
   console.log('ChartDisplay render:', { canShowChart, chartTitle });
 
   return (
@@ -37,22 +48,65 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
           </CardTitle>
           {canShowChart && (
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onExportChart('png')}
-              >
-                <Download className="w-4 h-4 mr-1" />
-                PNG
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onExportChart('svg')}
-              >
-                <Download className="w-4 h-4 mr-1" />
-                SVG
-              </Button>
+              <Dialog open={customizationOpen} onOpenChange={setCustomizationOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Settings className="w-4 h-4 mr-1" />
+                    Customize
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Customize Chart</DialogTitle>
+                  </DialogHeader>
+                  <ChartCustomization
+                    config={chartConfig}
+                    onConfigChange={onConfigChange}
+                    chartType={chartType}
+                    selectedVariables={selectedVariables}
+                  />
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={exportOpen} onOpenChange={setExportOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-1" />
+                    Export
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>Export Chart</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Choose the format to export your chart:
+                    </p>
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => {
+                          onExportChart('png');
+                          setExportOpen(false);
+                        }}
+                        className="flex-1"
+                      >
+                        Export as PNG
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          onExportChart('svg');
+                          setExportOpen(false);
+                        }}
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        Export as SVG
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
         </div>
