@@ -1,11 +1,20 @@
+
 import { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { calculateStatistics } from '../utils/statisticalUtils';
 import { generateChartConfig } from '../utils/chartUtils';
 
+interface VariableRoles {
+  xAxis?: string;
+  yAxis?: string;
+  color?: string;
+  size?: string;
+  series?: string;
+}
+
 export const useECharts = (
   selectedDataset: string,
-  selectedVariables: string[],
+  variableRoles: VariableRoles,
   chartType: string,
   chartConfig: any,
   getVariableData: (dataset: string, variables: string[]) => any
@@ -55,10 +64,9 @@ export const useECharts = (
   useEffect(() => {
     console.log('Chart update effect triggered:', {
       hasChartInstance: !!chartInstanceRef.current,
-      selectedVariables,
+      variableRoles,
       chartType,
-      variableCount: selectedVariables.length,
-      colorVariable: chartConfig.colorVariable
+      roleCount: Object.keys(variableRoles).filter(role => variableRoles[role as keyof VariableRoles]).length
     });
     
     if (!chartInstanceRef.current || chartInstanceRef.current.isDisposed()) {
@@ -66,13 +74,13 @@ export const useECharts = (
       return;
     }
 
-    if (!chartType || selectedVariables.length === 0) {
-      console.log('Missing chart type or variables');
+    if (!chartType || !Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles])) {
+      console.log('Missing chart type or variable roles');
       return;
     }
 
     updateChart();
-  }, [selectedVariables, chartType, chartConfig, selectedDataset]);
+  }, [variableRoles, chartType, chartConfig, selectedDataset]);
 
   const updateChart = () => {
     if (!chartInstanceRef.current || chartInstanceRef.current.isDisposed()) {
@@ -80,26 +88,19 @@ export const useECharts = (
       return;
     }
 
-    if (selectedVariables.length === 0 || !chartType) {
+    if (!Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles]) || !chartType) {
       console.log('Cannot update chart - missing requirements');
       return;
     }
 
-    console.log('Updating chart with:', { 
-      selectedVariables, 
-      chartType, 
-      colorVariable: chartConfig.colorVariable 
-    });
+    console.log('Updating chart with roles:', variableRoles);
     
     try {
-      // Include color variable in data fetching if it exists
-      const variablesToFetch = [...selectedVariables];
-      if (chartConfig.colorVariable && !variablesToFetch.includes(chartConfig.colorVariable)) {
-        variablesToFetch.push(chartConfig.colorVariable);
-      }
+      // Get all variables from roles (excluding undefined values)
+      const allVariables = Object.values(variableRoles).filter(Boolean) as string[];
       
-      console.log('Fetching data for variables:', variablesToFetch);
-      const data = getVariableData(selectedDataset, variablesToFetch);
+      console.log('Fetching data for variables:', allVariables);
+      const data = getVariableData(selectedDataset, allVariables);
       console.log('Retrieved data sample:', data?.slice(0, 3));
       
       if (!data || data.length === 0) {
@@ -119,10 +120,10 @@ export const useECharts = (
         return;
       }
       
-      const stats = calculateStatistics(data, selectedVariables);
+      const stats = calculateStatistics(data, allVariables);
       console.log('Calculated stats:', stats);
       
-      const option = generateChartConfig(chartType, data, selectedVariables, chartConfig, stats);
+      const option = generateChartConfig(chartType, data, variableRoles, chartConfig, stats);
       console.log('Generated chart config:', option);
       
       chartInstanceRef.current.setOption(option, true);

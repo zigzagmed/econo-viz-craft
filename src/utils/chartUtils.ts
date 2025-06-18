@@ -1,5 +1,13 @@
 import { calculateCorrelation, calculateRegression } from './statisticalUtils';
 
+interface VariableRoles {
+  xAxis?: string;
+  yAxis?: string;
+  color?: string;
+  size?: string;
+  series?: string;
+}
+
 const colorSchemes = {
   academic: ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'],
   colorblind: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'],
@@ -10,7 +18,7 @@ const colorSchemes = {
 export const generateChartConfig = (
   chartType: string,
   data: any[],
-  variables: string[],
+  variableRoles: VariableRoles,
   config: any,
   stats: Record<string, any>
 ) => {
@@ -34,29 +42,29 @@ export const generateChartConfig = (
 
   switch (chartType) {
     case 'bar':
-      return generateBarChart(data, variables, config, colors, baseOption);
+      return generateBarChart(data, variableRoles, config, colors, baseOption);
     case 'line':
-      return generateLineChart(data, variables, config, colors, baseOption);
+      return generateLineChart(data, variableRoles, config, colors, baseOption);
     case 'scatter':
     case 'regression':
-      return generateScatterChart(data, variables, config, colors, baseOption, chartType === 'regression');
+      return generateScatterChart(data, variableRoles, config, colors, baseOption, chartType === 'regression');
     case 'histogram':
-      return generateHistogram(data, variables[0], config, colors, baseOption);
+      return generateHistogram(data, variableRoles.xAxis!, config, colors, baseOption);
     case 'boxplot':
-      return generateBoxPlot(data, variables, config, colors, baseOption);
+      return generateBoxPlot(data, variableRoles, config, colors, baseOption);
     case 'correlation':
-      return generateCorrelationMatrix(data, variables, config, colors, baseOption);
+      return generateCorrelationMatrix(data, variableRoles, config, colors, baseOption);
     case 'pie':
-      return generatePieChart(data, variables[0], config, colors, baseOption);
+      return generatePieChart(data, variableRoles.xAxis!, config, colors, baseOption);
     default:
       return baseOption;
   }
 };
 
-const generateBarChart = (data: any[], variables: string[], config: any, colors: string[], baseOption: any) => {
-  const xVar = variables[0];
-  const yVar = variables[1] || variables[0];
-  const colorVar = config.colorVariable;
+const generateBarChart = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
+  const xVar = variableRoles.xAxis!;
+  const yVar = variableRoles.yAxis || variableRoles.xAxis!;
+  const colorVar = variableRoles.color;
   
   // Aggregate data for categorical x-axis
   const aggregated = data.reduce((acc, item) => {
@@ -86,7 +94,7 @@ const generateBarChart = (data: any[], variables: string[], config: any, colors:
       data: categories.map(category => {
         const categoryData = aggregated[category][colorValue];
         if (!categoryData) return 0;
-        return variables.length === 1 ? categoryData.count : categoryData.sum / categoryData.count;
+        return !variableRoles.yAxis ? categoryData.count : categoryData.sum / categoryData.count;
       }),
       itemStyle: {
         color: colors[colorIndex % colors.length]
@@ -120,7 +128,7 @@ const generateBarChart = (data: any[], variables: string[], config: any, colors:
     // Original single-color bar chart logic
     const values = categories.map(key => {
       const categoryData = Object.values(aggregated[key] as any)[0] as any;
-      return variables.length === 1 ? categoryData.count : categoryData.sum / categoryData.count;
+      return !variableRoles.yAxis ? categoryData.count : categoryData.sum / categoryData.count;
     });
 
     return {
@@ -152,10 +160,32 @@ const generateBarChart = (data: any[], variables: string[], config: any, colors:
   }
 };
 
-const generateLineChart = (data: any[], variables: string[], config: any, colors: string[], baseOption: any) => {
-  const xVar = variables[0];
+const generateLineChart = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
+  const xVar = variableRoles.xAxis!;
+  const yVar = variableRoles.yAxis!;
+  const seriesVar = variableRoles.series;
   const sortedData = [...data].sort((a, b) => a[xVar] - b[xVar]);
   
+  const series = [{
+    name: yVar,
+    data: sortedData.map(item => [item[xVar], item[yVar]]),
+    type: 'line',
+    itemStyle: {
+      color: colors[0]
+    }
+  }];
+
+  if (seriesVar) {
+    series.push({
+      name: seriesVar,
+      data: sortedData.map(item => [item[xVar], item[seriesVar]]),
+      type: 'line',
+      itemStyle: {
+        color: colors[1]
+      }
+    } as any);
+  }
+
   return {
     ...baseOption,
     xAxis: {
@@ -170,14 +200,7 @@ const generateLineChart = (data: any[], variables: string[], config: any, colors
       nameLocation: 'middle',
       nameGap: 50
     },
-    series: variables.slice(1).map((yVar, index) => ({
-      name: yVar,
-      data: sortedData.map(item => [item[xVar], item[yVar]]),
-      type: 'line',
-      itemStyle: {
-        color: colors[index % colors.length]
-      }
-    })),
+    series,
     legend: {
       top: 30
     },
@@ -187,10 +210,11 @@ const generateLineChart = (data: any[], variables: string[], config: any, colors
   };
 };
 
-const generateScatterChart = (data: any[], variables: string[], config: any, colors: string[], baseOption: any, showRegression: boolean) => {
-  const xVar = variables[0];
-  const yVar = variables[1];
-  const colorVar = config.colorVariable;
+const generateScatterChart = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any, showRegression: boolean) => {
+  const xVar = variableRoles.xAxis!;
+  const yVar = variableRoles.yAxis!;
+  const colorVar = variableRoles.color;
+  const sizeVar = variableRoles.size;
   
   if (colorVar) {
     // Group data by color variable
@@ -198,7 +222,13 @@ const generateScatterChart = (data: any[], variables: string[], config: any, col
     
     const series = colorValues.map((colorValue, colorIndex) => {
       const filteredData = data.filter(item => item[colorVar] === colorValue);
-      const scatterData = filteredData.map(item => [item[xVar], item[yVar]]);
+      const scatterData = filteredData.map(item => {
+        const point = [item[xVar], item[yVar]];
+        if (sizeVar) {
+          point.push(item[sizeVar]);
+        }
+        return point;
+      });
       
       return {
         name: colorValue,
@@ -234,7 +264,13 @@ const generateScatterChart = (data: any[], variables: string[], config: any, col
     };
   } else {
     // Original single-color scatter chart logic
-    const scatterData = data.map(item => [item[xVar], item[yVar]]);
+    const scatterData = data.map(item => {
+      const point = [item[xVar], item[yVar]];
+      if (sizeVar) {
+        point.push(item[sizeVar]);
+      }
+      return point;
+    });
     
     const series = [{
       data: scatterData,
@@ -342,8 +378,53 @@ const generateHistogram = (data: any[], variable: string, config: any, colors: s
   };
 };
 
-const generateBoxPlot = (data: any[], variables: string[], config: any, colors: string[], baseOption: any) => {
-  const boxData = variables.map(variable => {
+const generateBoxPlot = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
+  const variable = variableRoles.xAxis!;
+  const colorVar = variableRoles.color;
+  
+  if (colorVar) {
+    // Group by color variable
+    const colorValues = [...new Set(data.map(item => item[colorVar]))];
+    const boxData = colorValues.map(colorValue => {
+      const filteredData = data.filter(item => item[colorVar] === colorValue);
+      const values = filteredData.map(item => parseFloat(item[variable])).filter(val => !isNaN(val)).sort((a, b) => a - b);
+      const q1 = values[Math.floor(values.length * 0.25)];
+      const median = values[Math.floor(values.length * 0.5)];
+      const q3 = values[Math.floor(values.length * 0.75)];
+      const min = values[0];
+      const max = values[values.length - 1];
+      
+      return [min, q1, median, q3, max];
+    });
+
+    return {
+      ...baseOption,
+      xAxis: {
+        type: 'category',
+        data: colorValues,
+        name: config.xAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 30
+      },
+      yAxis: {
+        type: 'value',
+        name: config.yAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 50
+      },
+      series: [{
+        data: boxData,
+        type: 'boxplot',
+        itemStyle: {
+          color: colors[0]
+        }
+      }],
+      tooltip: {
+        trigger: 'item'
+      }
+    };
+  } else {
+    // Single box plot
     const values = data.map(item => parseFloat(item[variable])).filter(val => !isNaN(val)).sort((a, b) => a - b);
     const q1 = values[Math.floor(values.length * 0.25)];
     const median = values[Math.floor(values.length * 0.5)];
@@ -351,38 +432,40 @@ const generateBoxPlot = (data: any[], variables: string[], config: any, colors: 
     const min = values[0];
     const max = values[values.length - 1];
     
-    return [min, q1, median, q3, max];
-  });
+    const boxData = [[min, q1, median, q3, max]];
 
-  return {
-    ...baseOption,
-    xAxis: {
-      type: 'category',
-      data: variables,
-      name: config.xAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 30
-    },
-    yAxis: {
-      type: 'value',
-      name: config.yAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 50
-    },
-    series: [{
-      data: boxData,
-      type: 'boxplot',
-      itemStyle: {
-        color: colors[0]
+    return {
+      ...baseOption,
+      xAxis: {
+        type: 'category',
+        data: [variable],
+        name: config.xAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 30
+      },
+      yAxis: {
+        type: 'value',
+        name: config.yAxisLabel,
+        nameLocation: 'middle',
+        nameGap: 50
+      },
+      series: [{
+        data: boxData,
+        type: 'boxplot',
+        itemStyle: {
+          color: colors[0]
+        }
+      }],
+      tooltip: {
+        trigger: 'item'
       }
-    }],
-    tooltip: {
-      trigger: 'item'
-    }
-  };
+    };
+  }
 };
 
-const generateCorrelationMatrix = (data: any[], variables: string[], config: any, colors: string[], baseOption: any) => {
+const generateCorrelationMatrix = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
+  // For correlation, we need to get all continuous variables or use series if specified
+  const variables = variableRoles.series ? [variableRoles.series] : Object.values(variableRoles).filter(Boolean) as string[];
   const correlationData = [];
   
   for (let i = 0; i < variables.length; i++) {

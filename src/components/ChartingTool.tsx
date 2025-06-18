@@ -2,48 +2,37 @@
 import React, { useState } from 'react';
 import { ChartHeader } from './charting/ChartHeader';
 import { ChartTypeSelectionCard } from './charting/ChartTypeSelectionCard';
-import { VariableSelectionCard } from './charting/VariableSelectionCard';
-import { SelectedVariablesDisplay } from './charting/SelectedVariablesDisplay';
+import { RoleBasedVariableSelector } from './charting/RoleBasedVariableSelector';
+import { SelectedRolesDisplay } from './charting/SelectedRolesDisplay';
 import { ChartDisplay } from './charting/ChartDisplay';
 import { useChartingData } from '../hooks/useChartingData';
 import { useChartConfig } from '../hooks/useChartConfig';
 import { useECharts } from '../hooks/useECharts';
 
+interface VariableRoles {
+  xAxis?: string;
+  yAxis?: string;
+  color?: string;
+  size?: string;
+  series?: string;
+}
+
 export const ChartingTool = () => {
   const selectedDataset = 'gdp_growth';
   const [chartType, setChartType] = useState<string>('');
-  const [selectedVariables, setSelectedVariables] = useState<string[]>([]);
+  const [variableRoles, setVariableRoles] = useState<VariableRoles>({});
 
   const { getVariableData, getDatasetInfo } = useChartingData();
-  const { chartConfig, setChartConfig } = useChartConfig(selectedVariables, chartType);
+  const { chartConfig, setChartConfig } = useChartConfig(variableRoles, chartType);
   const { chartRef, handleExportChart } = useECharts(
     selectedDataset,
-    selectedVariables,
+    variableRoles,
     chartType,
     chartConfig,
     getVariableData
   );
 
-  const getChartRequirements = (type: string) => {
-    const requirements = {
-      bar: { min: 1, max: 2, description: 'Choose 1-2 variables for comparison' },
-      line: { min: 2, max: 3, description: 'Choose 2-3 variables to show trends' },
-      pie: { min: 1, max: 1, description: 'Choose exactly 1 categorical variable' },
-      scatter: { min: 2, max: 2, description: 'Choose exactly 2 continuous variables' },
-      histogram: { min: 1, max: 1, description: 'Choose exactly 1 continuous variable' },
-      boxplot: { min: 1, max: 3, description: 'Choose 1-3 variables for distribution analysis' },
-      violin: { min: 1, max: 2, description: 'Choose 1-2 variables for distribution' },
-      density: { min: 1, max: 2, description: 'Choose 1-2 continuous variables' },
-      regression: { min: 2, max: 2, description: 'Choose exactly 2 continuous variables' },
-      correlation: { min: 2, max: 10, description: 'Choose 2-10 variables for correlation matrix' },
-      residual: { min: 2, max: 2, description: 'Choose exactly 2 continuous variables' },
-      qqplot: { min: 1, max: 1, description: 'Choose exactly 1 continuous variable' },
-    };
-    return requirements[type] || { min: 1, max: 1, description: 'Select variables' };
-  };
-
-  const canShowChart = chartType && selectedVariables.length > 0;
-  const requirements = chartType ? getChartRequirements(chartType) : null;
+  const canShowChart = chartType && Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -59,20 +48,19 @@ export const ChartingTool = () => {
             />
 
             {chartType && (
-              <VariableSelectionCard
+              <RoleBasedVariableSelector
                 selectedDataset={selectedDataset}
-                selectedVariables={selectedVariables}
-                onVariablesChange={setSelectedVariables}
+                chartType={chartType}
+                variableRoles={variableRoles}
+                onRolesChange={setVariableRoles}
                 getDatasetInfo={getDatasetInfo}
-                requirements={requirements}
               />
             )}
 
-            {selectedVariables.length > 0 && (
-              <SelectedVariablesDisplay
-                selectedVariables={selectedVariables}
+            {Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles]) && (
+              <SelectedRolesDisplay
+                variableRoles={variableRoles}
                 chartType={chartType}
-                colorVariable={chartConfig.colorVariable}
               />
             )}
           </div>
@@ -84,7 +72,7 @@ export const ChartingTool = () => {
               chartTitle={chartConfig.title}
               chartRef={chartRef}
               selectedDataset={selectedDataset}
-              selectedVariables={selectedVariables}
+              variableRoles={variableRoles}
               chartType={chartType}
               chartConfig={chartConfig}
               customizationOpen={false}

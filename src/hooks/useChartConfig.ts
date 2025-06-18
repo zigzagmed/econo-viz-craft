@@ -1,7 +1,15 @@
 
 import { useState, useEffect } from 'react';
 
-export const useChartConfig = (selectedVariables: string[], chartType: string) => {
+interface VariableRoles {
+  xAxis?: string;
+  yAxis?: string;
+  color?: string;
+  size?: string;
+  series?: string;
+}
+
+export const useChartConfig = (variableRoles: VariableRoles, chartType: string) => {
   const [chartConfig, setChartConfig] = useState({
     title: '',
     xAxisLabel: '',
@@ -13,83 +21,87 @@ export const useChartConfig = (selectedVariables: string[], chartType: string) =
     colorVariable: undefined as string | undefined
   });
 
-  const generateDynamicConfig = (variables: string[], type: string) => {
+  const generateDynamicConfig = (roles: VariableRoles, type: string) => {
     let title = '';
     let xAxisLabel = '';
     let yAxisLabel = '';
 
-    if (variables.length === 1) {
-      const variable = variables[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      
-      switch (type) {
-        case 'histogram':
-          title = `${variable} Distribution`;
-          xAxisLabel = variable;
-          yAxisLabel = 'Frequency';
-          break;
-        case 'boxplot':
-          title = `${variable} Box Plot`;
-          xAxisLabel = 'Variable';
-          yAxisLabel = variable;
-          break;
-        case 'pie':
-          title = `${variable} Breakdown`;
-          break;
-        default:
-          title = `${variable} Chart`;
-          xAxisLabel = 'Categories';
-          yAxisLabel = variable;
-      }
-    } else if (variables.length === 2) {
-      const var1 = variables[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      const var2 = variables[1].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const formatVariableName = (variable: string) => 
+      variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+    if (roles.xAxis && roles.yAxis) {
+      const xVar = formatVariableName(roles.xAxis);
+      const yVar = formatVariableName(roles.yAxis);
       
       switch (type) {
         case 'scatter':
         case 'regression':
-          title = `${var1} vs ${var2}`;
-          xAxisLabel = var1;
-          yAxisLabel = var2;
+          title = `${xVar} vs ${yVar}`;
+          xAxisLabel = xVar;
+          yAxisLabel = yVar;
           break;
         case 'bar':
-          title = `${var1} and ${var2}`;
-          xAxisLabel = var1;
-          yAxisLabel = var2;
+        case 'line':
+          title = `${xVar} and ${yVar}`;
+          xAxisLabel = xVar;
+          yAxisLabel = yVar;
           break;
         default:
-          title = `${var1} and ${var2}`;
-          xAxisLabel = var1;
-          yAxisLabel = var2;
+          title = `${xVar} and ${yVar}`;
+          xAxisLabel = xVar;
+          yAxisLabel = yVar;
+      }
+    } else if (roles.xAxis) {
+      const xVar = formatVariableName(roles.xAxis);
+      
+      switch (type) {
+        case 'histogram':
+          title = `${xVar} Distribution`;
+          xAxisLabel = xVar;
+          yAxisLabel = 'Frequency';
+          break;
+        case 'boxplot':
+          title = `${xVar} Box Plot`;
+          xAxisLabel = 'Variable';
+          yAxisLabel = xVar;
+          break;
+        case 'pie':
+          title = `${xVar} Breakdown`;
+          break;
+        default:
+          title = `${xVar} Chart`;
+          xAxisLabel = 'Categories';
+          yAxisLabel = xVar;
       }
     } else {
       switch (type) {
         case 'correlation':
           title = `Correlation Matrix`;
           break;
-        case 'line':
-          title = `Multi-Variable Trends`;
-          xAxisLabel = selectedVariables[0]?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || '';
-          yAxisLabel = 'Values';
-          break;
         default:
-          title = `Multi-Variable Analysis`;
+          title = `Chart Analysis`;
           xAxisLabel = 'Variables';
           yAxisLabel = 'Values';
       }
     }
 
-    return { title, xAxisLabel, yAxisLabel };
+    return { 
+      title, 
+      xAxisLabel, 
+      yAxisLabel,
+      colorVariable: roles.color
+    };
   };
 
   useEffect(() => {
-    if (selectedVariables.length > 0) {
-      const newConfig = generateDynamicConfig(selectedVariables, chartType);
+    if (Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles])) {
+      const newConfig = generateDynamicConfig(variableRoles, chartType);
       setChartConfig(prev => ({
         ...prev,
         ...newConfig
       }));
     }
-  }, [selectedVariables, chartType]);
+  }, [variableRoles, chartType]);
 
   return { chartConfig, setChartConfig };
 };
