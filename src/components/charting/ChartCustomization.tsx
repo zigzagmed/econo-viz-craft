@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import { Palette } from 'lucide-react';
 
 interface ChartCustomizationProps {
   config: {
@@ -12,6 +14,7 @@ interface ChartCustomizationProps {
     xAxisLabel: string;
     yAxisLabel: string;
     colorScheme: string;
+    customColors?: string[];
     showStats: boolean;
     showTrendLine: boolean;
   };
@@ -26,6 +29,9 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   chartType,
   selectedVariables
 }) => {
+  const [showCustomColors, setShowCustomColors] = useState(config.colorScheme === 'custom');
+  const [customColors, setCustomColors] = useState(config.customColors || ['#2563eb', '#dc2626', '#16a34a']);
+
   const updateConfig = (key: string, value: any) => {
     onConfigChange({ ...config, [key]: value });
   };
@@ -34,8 +40,41 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
     { id: 'academic', name: 'Academic', description: 'Professional colors' },
     { id: 'colorblind', name: 'Colorblind Safe', description: 'Accessible palette' },
     { id: 'grayscale', name: 'Grayscale', description: 'Black and white' },
-    { id: 'vibrant', name: 'Vibrant', description: 'Bright colors' }
+    { id: 'vibrant', name: 'Vibrant', description: 'Bright colors' },
+    { id: 'custom', name: 'Custom', description: 'Choose your own colors' }
   ];
+
+  const handleColorSchemeChange = (value: string) => {
+    updateConfig('colorScheme', value);
+    setShowCustomColors(value === 'custom');
+    
+    if (value === 'custom') {
+      updateConfig('customColors', customColors);
+    } else {
+      updateConfig('customColors', undefined);
+    }
+  };
+
+  const handleCustomColorChange = (index: number, color: string) => {
+    const newColors = [...customColors];
+    newColors[index] = color;
+    setCustomColors(newColors);
+    updateConfig('customColors', newColors);
+  };
+
+  const addCustomColor = () => {
+    const newColors = [...customColors, '#000000'];
+    setCustomColors(newColors);
+    updateConfig('customColors', newColors);
+  };
+
+  const removeCustomColor = (index: number) => {
+    if (customColors.length > 1) {
+      const newColors = customColors.filter((_, i) => i !== index);
+      setCustomColors(newColors);
+      updateConfig('customColors', newColors);
+    }
+  };
 
   const showTrendLineOption = ['scatter', 'regression', 'line'].includes(chartType);
   const showStatsOption = !['pie'].includes(chartType);
@@ -73,7 +112,7 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
 
       <div className="space-y-2">
         <Label className="text-sm font-medium">Color Scheme</Label>
-        <Select value={config.colorScheme} onValueChange={(value) => updateConfig('colorScheme', value)}>
+        <Select value={config.colorScheme} onValueChange={handleColorSchemeChange}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -88,6 +127,54 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
             ))}
           </SelectContent>
         </Select>
+
+        {showCustomColors && (
+          <div className="space-y-3 mt-3 p-3 border rounded-lg bg-gray-50">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Custom Colors</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addCustomColor}
+                className="h-8"
+              >
+                <Palette className="w-3 h-3 mr-1" />
+                Add
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {customColors.map((color, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => handleCustomColorChange(index, e.target.value)}
+                    className="w-8 h-8 rounded border cursor-pointer"
+                  />
+                  <Input
+                    type="text"
+                    value={color}
+                    onChange={(e) => handleCustomColorChange(index, e.target.value)}
+                    className="flex-1 h-8"
+                    placeholder="#000000"
+                  />
+                  {customColors.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeCustomColor(index)}
+                      className="h-8 w-8 p-0"
+                    >
+                      ×
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <Separator />

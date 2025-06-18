@@ -1,4 +1,3 @@
-
 import { calculateCorrelation, calculateRegression } from './statisticalUtils';
 
 const colorSchemes = {
@@ -15,7 +14,10 @@ export const generateChartConfig = (
   config: any,
   stats: Record<string, any>
 ) => {
-  const colors = colorSchemes[config.colorScheme as keyof typeof colorSchemes] || colorSchemes.academic;
+  // Use custom colors if available, otherwise fall back to preset schemes
+  const colors = config.customColors && config.colorScheme === 'custom' 
+    ? config.customColors 
+    : colorSchemes[config.colorScheme as keyof typeof colorSchemes] || colorSchemes.academic;
   
   const baseOption = {
     title: {
@@ -165,7 +167,7 @@ const generateScatterChart = (data: any[], variables: string[], config: any, col
       type: 'line',
       smooth: false,
       itemStyle: {
-        color: colors[1]
+        color: colors[1] || colors[0]
       },
       lineStyle: {
         type: 'dashed'

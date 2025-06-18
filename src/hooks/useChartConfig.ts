@@ -7,6 +7,7 @@ export const useChartConfig = (selectedVariables: string[], chartType: string) =
     xAxisLabel: '',
     yAxisLabel: '',
     colorScheme: 'academic',
+    customColors: undefined as string[] | undefined,
     showStats: true,
     showTrendLine: false
   });
