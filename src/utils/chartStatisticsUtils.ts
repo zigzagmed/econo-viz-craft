@@ -47,26 +47,27 @@ export const generateChartStatistics = (
 
         // Calculate statistic for each category
         Object.entries(grouped).forEach(([category, values]) => {
-          if (isArray(values) && values.length > 0) {
+          if (isArray(values) && values.length > 0 && values.every(isNumber)) {
+            const numericValues = values as number[];
             let result;
             switch (variableRoles.statistic) {
               case 'sum':
-                result = values.reduce((sum: number, val: number) => sum + val, 0);
+                result = numericValues.reduce((sum: number, val: number) => sum + val, 0);
                 break;
               case 'average':
-                result = values.reduce((sum: number, val: number) => sum + val, 0) / values.length;
+                result = numericValues.reduce((sum: number, val: number) => sum + val, 0) / numericValues.length;
                 break;
               case 'count':
-                result = values.length;
+                result = numericValues.length;
                 break;
               case 'min':
-                result = Math.min(...values);
+                result = Math.min(...numericValues);
                 break;
               case 'max':
-                result = Math.max(...values);
+                result = Math.max(...numericValues);
                 break;
               default:
-                result = values.length;
+                result = numericValues.length;
             }
             stats[category] = { value: result };
           }
@@ -134,11 +135,15 @@ export const generateChartStatistics = (
           return acc;
         }, {} as Record<string, number>);
         
-        const total = Object.values(pieData).reduce((sum, count) => sum + count, 0);
+        const total = Object.values(pieData).reduce((sum, count) => {
+          return sum + (isNumber(count) ? count : 0);
+        }, 0);
         
         Object.entries(pieData).forEach(([category, count]) => {
-          const percentage = (count / total) * 100;
-          stats[category] = { value: `${count} (${percentage.toFixed(1)}%)` };
+          if (isNumber(count)) {
+            const percentage = (count / total) * 100;
+            stats[category] = { value: `${count} (${percentage.toFixed(1)}%)` };
+          }
         });
       }
       break;
