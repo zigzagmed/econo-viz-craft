@@ -166,24 +166,57 @@ const generateLineChart = (data: any[], variableRoles: VariableRoles, config: an
   const seriesVar = variableRoles.series;
   const sortedData = [...data].sort((a, b) => a[xVar] - b[xVar]);
   
-  const series = [{
-    name: yVar,
-    data: sortedData.map(item => [item[xVar], item[yVar]]),
-    type: 'line',
-    itemStyle: {
-      color: colors[0]
-    }
-  }];
-
-  if (seriesVar) {
+  const series = [];
+  
+  // Check if X and Y are the same variable
+  const sameXY = xVar === yVar;
+  
+  if (sameXY && seriesVar) {
+    // When X and Y are the same, only show X vs Series line (more meaningful)
     series.push({
-      name: seriesVar,
+      name: `${xVar} vs ${seriesVar}`,
       data: sortedData.map(item => [item[xVar], item[seriesVar]]),
       type: 'line',
       itemStyle: {
-        color: colors[1]
+        color: colors[0]
       }
-    } as any);
+    });
+  } else if (sameXY && !seriesVar) {
+    // When X and Y are the same and no series, show diagonal line (X = Y)
+    const minVal = Math.min(...sortedData.map(item => item[xVar]));
+    const maxVal = Math.max(...sortedData.map(item => item[xVar]));
+    series.push({
+      name: `${xVar} = ${yVar}`,
+      data: [[minVal, minVal], [maxVal, maxVal]],
+      type: 'line',
+      itemStyle: {
+        color: colors[0]
+      },
+      lineStyle: {
+        type: 'dashed'
+      }
+    });
+  } else {
+    // Normal case: X and Y are different variables
+    series.push({
+      name: yVar,
+      data: sortedData.map(item => [item[xVar], item[yVar]]),
+      type: 'line',
+      itemStyle: {
+        color: colors[0]
+      }
+    });
+
+    if (seriesVar) {
+      series.push({
+        name: seriesVar,
+        data: sortedData.map(item => [item[xVar], item[seriesVar]]),
+        type: 'line',
+        itemStyle: {
+          color: colors[1]
+        }
+      });
+    }
   }
 
   return {
@@ -201,9 +234,7 @@ const generateLineChart = (data: any[], variableRoles: VariableRoles, config: an
       nameGap: 50
     },
     series,
-    legend: {
-      top: 30
-    },
+    legend: series.length > 1 ? { top: 30 } : undefined,
     tooltip: {
       trigger: 'axis'
     }

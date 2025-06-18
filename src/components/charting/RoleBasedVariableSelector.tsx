@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Database, Info } from 'lucide-react';
+import { Database, Info, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
@@ -140,6 +140,12 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
   const requiredRoles = roleKeys.filter(role => roleRequirements[role].required);
   const missingRequiredRoles = requiredRoles.filter(role => !variableRoles[role as keyof VariableRoles]);
 
+  // Check for potentially confusing configurations
+  const showLineChartWarning = chartType === 'line' && 
+    variableRoles.xAxis && 
+    variableRoles.yAxis && 
+    variableRoles.xAxis === variableRoles.yAxis;
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -154,6 +160,19 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
             <Info className="h-4 w-4" />
             <AlertDescription>
               <strong>Required:</strong> Please select variables for {missingRequiredRoles.map(role => roleRequirements[role].label).join(', ')}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {showLineChartWarning && (
+          <Alert className="border-amber-200 bg-amber-50">
+            <AlertTriangle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="text-amber-800">
+              <strong>Note:</strong> You've selected the same variable for both X and Y axes. 
+              {variableRoles.series ? 
+                ` The chart will show ${variableRoles.xAxis} vs ${variableRoles.series} instead.` :
+                ` This will show a diagonal line (${variableRoles.xAxis} = ${variableRoles.yAxis}). Consider adding a Series variable for more meaningful analysis.`
+              }
             </AlertDescription>
           </Alert>
         )}
@@ -188,6 +207,13 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
                             ))}
                           </div>
                         </div>
+                        {chartType === 'line' && role === 'yAxis' && (
+                          <div className="pt-2 border-t">
+                            <p className="text-xs text-gray-600">
+                              <strong>Tip:</strong> For line charts, choose different variables for X and Y axes to show meaningful relationships.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </HoverCardContent>
                   </HoverCard>

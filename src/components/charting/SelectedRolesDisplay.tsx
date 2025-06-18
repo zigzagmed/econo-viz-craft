@@ -65,6 +65,12 @@ export const SelectedRolesDisplay: React.FC<SelectedRolesDisplayProps> = ({
     return null;
   }
 
+  // Check for same X and Y in line chart
+  const isLineChartSameXY = chartType === 'line' && 
+    variableRoles.xAxis && 
+    variableRoles.yAxis && 
+    variableRoles.xAxis === variableRoles.yAxis;
+
   return (
     <Card className="mb-4">
       <CardHeader className="pb-3">
@@ -100,7 +106,18 @@ export const SelectedRolesDisplay: React.FC<SelectedRolesDisplayProps> = ({
           </div>
         )}
         
-        {['scatter', 'bar', 'line'].includes(chartType) && assignedRoles.length >= 2 && (
+        {chartType === 'line' && isLineChartSameXY && (
+          <div className="mt-3 pt-2 border-t border-gray-100">
+            <p className="text-xs text-amber-600">
+              {variableRoles.series ? 
+                `Will plot ${variableRoles.xAxis} vs ${variableRoles.series}` :
+                `Will show diagonal line (${variableRoles.xAxis} = ${variableRoles.yAxis})`
+              }
+            </p>
+          </div>
+        )}
+        
+        {['scatter', 'bar', 'line'].includes(chartType) && assignedRoles.length >= 2 && !isLineChartSameXY && (
           <div className="mt-3 pt-2 border-t border-gray-100">
             <p className="text-xs text-gray-500">
               Statistical overlay available in customization
