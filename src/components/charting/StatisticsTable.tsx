@@ -14,10 +14,13 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
   statistics,
   decimals
 }) => {
-  const formatValue = (value: number | string) => {
+  const formatValue = (value: number | string): string => {
     if (typeof value === 'string') return value;
     if (value === undefined || value === null) return 'N/A';
-    return typeof value === 'number' ? value.toFixed(decimals) : value.toString();
+    if (typeof value === 'number') {
+      return Number.isInteger(value) ? value.toString() : value.toFixed(decimals);
+    }
+    return String(value);
   };
 
   const statEntries = Object.entries(statistics);
