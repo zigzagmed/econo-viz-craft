@@ -25,6 +25,7 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
     let title = '';
     let xAxisLabel = '';
     let yAxisLabel = '';
+    let showTrendLine = false;
 
     const formatVariableName = (variable: string) => 
       variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -35,10 +36,15 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
       
       switch (type) {
         case 'scatter':
+          title = `${xVar} vs ${yVar}`;
+          xAxisLabel = xVar;
+          yAxisLabel = yVar;
+          break;
         case 'regression':
           title = `${xVar} vs ${yVar}`;
           xAxisLabel = xVar;
           yAxisLabel = yVar;
+          showTrendLine = true; // Enable trend line by default for regression
           break;
         case 'bar':
         case 'line':
@@ -89,6 +95,7 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
       title, 
       xAxisLabel, 
       yAxisLabel,
+      showTrendLine,
       colorVariable: roles.color
     };
   };

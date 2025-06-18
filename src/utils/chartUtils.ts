@@ -280,7 +280,8 @@ const generateScatterChart = (data: any[], variableRoles: VariableRoles, config:
       }
     }];
 
-    if (showRegression && config.showTrendLine) {
+    // Show trend line for regression charts by default, or when explicitly enabled
+    if (showRegression || config.showTrendLine) {
       const xValues = data.map(item => parseFloat(item[xVar]));
       const yValues = data.map(item => parseFloat(item[yVar]));
       const regression = calculateRegression(xValues, yValues);
@@ -296,6 +297,7 @@ const generateScatterChart = (data: any[], variableRoles: VariableRoles, config:
         data: lineData,
         type: 'line',
         smooth: false,
+        name: `Trend Line (R² = ${regression.r2.toFixed(3)})`,
         itemStyle: {
           color: colors[1] || colors[0]
         },
@@ -321,6 +323,7 @@ const generateScatterChart = (data: any[], variableRoles: VariableRoles, config:
         nameGap: 50
       },
       series,
+      legend: showRegression || config.showTrendLine ? { top: 30 } : undefined,
       tooltip: {
         trigger: 'item'
       }
