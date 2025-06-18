@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChartHeader } from './charting/ChartHeader';
 import { ChartTypeSelectionCard } from './charting/ChartTypeSelectionCard';
 import { RoleBasedVariableSelector } from './charting/RoleBasedVariableSelector';
@@ -32,6 +32,13 @@ export const ChartingTool = () => {
     chartConfig,
     getVariableData
   );
+
+  // Reset variable roles when chart type changes
+  useEffect(() => {
+    if (chartType) {
+      setVariableRoles({});
+    }
+  }, [chartType]);
 
   const canShowChart = chartType && Object.keys(variableRoles).some(role => 
     role !== 'histogramBins' && variableRoles[role as keyof VariableRoles]

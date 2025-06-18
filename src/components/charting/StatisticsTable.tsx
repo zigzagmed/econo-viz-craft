@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface StatisticsTableProps {
   statistics: Record<string, {
@@ -34,15 +35,22 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
         <CardTitle className="text-base">Chart Statistics</CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          {statEntries.map(([statName, statData], index) => (
-            <span key={statName} className="whitespace-nowrap">
-              <span className="text-gray-600">{statName}:</span>{' '}
-              <span className="font-medium">{formatValue(statData.value)}</span>
-              {index < statEntries.length - 1 && <span className="text-gray-400 ml-2">•</span>}
-            </span>
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="font-medium">Statistic</TableHead>
+              <TableHead className="font-medium">Value</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {statEntries.map(([statName, statData]) => (
+              <TableRow key={statName}>
+                <TableCell className="font-medium">{statName}</TableCell>
+                <TableCell>{formatValue(statData.value)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

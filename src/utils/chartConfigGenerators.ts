@@ -61,32 +61,32 @@ export const generateChartConfig = (
   switch (chartType) {
     case 'scatter':
     case 'regression':
-      return generateScatterConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors);
+      return generateScatterConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors, formatTooltipValue);
 
     case 'line':
-      return generateLineConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors);
+      return generateLineConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors, formatTooltipValue);
 
     case 'bar':
-      return generateBarConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors);
+      return generateBarConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors, formatTooltipValue);
 
     case 'histogram':
-      return generateHistogramConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors);
+      return generateHistogramConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors, formatTooltipValue);
 
     case 'pie':
-      return generatePieConfig(data, variableRoles, chartConfig, titleConfig, colors);
+      return generatePieConfig(data, variableRoles, chartConfig, titleConfig, colors, formatTooltipValue);
 
     case 'boxplot':
-      return generateBoxplotConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors);
+      return generateBoxplotConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors, formatTooltipValue);
 
     case 'correlation':
-      return generateCorrelationConfig(data, variableRoles, chartConfig, titleConfig);
+      return generateCorrelationConfig(data, variableRoles, chartConfig, titleConfig, formatTooltipValue);
 
     default:
       return {};
   }
 };
 
-const generateScatterConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[]) => {
+const generateScatterConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[], formatTooltipValue: any) => {
   if (!variableRoles.xAxis || !variableRoles.yAxis) return {};
   
   // If color variable is specified, group data by color variable
@@ -164,7 +164,7 @@ const generateScatterConfig = (data: any[], variableRoles: VariableRoles, chartC
   }
 };
 
-const generateLineConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[]) => {
+const generateLineConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[], formatTooltipValue: any) => {
   if (!variableRoles.xAxis || !variableRoles.yAxis) return {};
   
   if (variableRoles.groupBy) {
@@ -241,7 +241,7 @@ const generateLineConfig = (data: any[], variableRoles: VariableRoles, chartConf
   }
 };
 
-const generateBarConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[]) => {
+const generateBarConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[], formatTooltipValue: any) => {
   if (!variableRoles.xAxis || !variableRoles.yAxis || !variableRoles.statistic) return {};
   
   // Group data by X variable and calculate the selected statistic for Y
@@ -307,7 +307,7 @@ const generateBarConfig = (data: any[], variableRoles: VariableRoles, chartConfi
   };
 };
 
-const generateHistogramConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[]) => {
+const generateHistogramConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[], formatTooltipValue: any) => {
   if (!variableRoles.xAxis) return {};
   
   const histValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
@@ -357,7 +357,7 @@ const generateHistogramConfig = (data: any[], variableRoles: VariableRoles, char
   };
 };
 
-const generatePieConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, colors: string[]) => {
+const generatePieConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, colors: string[], formatTooltipValue: any) => {
   if (!variableRoles.xAxis) return {};
   
   const pieData = data.reduce((acc, item) => {
@@ -396,7 +396,7 @@ const generatePieConfig = (data: any[], variableRoles: VariableRoles, chartConfi
   };
 };
 
-const generateBoxplotConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[]) => {
+const generateBoxplotConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, getAxisLabelConfig: any, colors: string[], formatTooltipValue: any) => {
   if (!variableRoles.xAxis) return {};
   
   const boxplotValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null).sort((a, b) => a - b);
@@ -432,7 +432,7 @@ const generateBoxplotConfig = (data: any[], variableRoles: VariableRoles, chartC
   };
 };
 
-const generateCorrelationConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any) => {
+const generateCorrelationConfig = (data: any[], variableRoles: VariableRoles, chartConfig: any, titleConfig: any, formatTooltipValue: any) => {
   if (!variableRoles.variables || variableRoles.variables.length < 2) return {};
   
   const variables = variableRoles.variables;
