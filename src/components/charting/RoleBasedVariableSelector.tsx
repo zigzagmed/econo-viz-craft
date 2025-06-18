@@ -5,6 +5,7 @@ import { Database } from 'lucide-react';
 import { getChartRoleRequirements } from './utils/chartRoleRequirements';
 import { RoleSelector } from './components/RoleSelector';
 import { MultipleVariableSelector } from './components/MultipleVariableSelector';
+import { HistogramBinsSelector } from './components/HistogramBinsSelector';
 import { ValidationAlerts } from './components/ValidationAlerts';
 import { RoleBasedVariableSelectorProps, VariableRoles } from './types/variableTypes';
 
@@ -64,6 +65,12 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
       (newRoles as any)[role] = variables;
     }
 
+    onRolesChange(newRoles);
+  };
+
+  const handleHistogramBinsChange = (bins: number) => {
+    const newRoles = { ...variableRoles };
+    newRoles.histogramBins = bins;
     onRolesChange(newRoles);
   };
 
@@ -128,6 +135,14 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
               />
             );
           })}
+
+          {/* Show histogram bins selector for histogram charts */}
+          {chartType === 'histogram' && variableRoles.xAxis && (
+            <HistogramBinsSelector
+              bins={variableRoles.histogramBins || 10}
+              onBinsChange={handleHistogramBinsChange}
+            />
+          )}
         </div>
       </CardContent>
     </Card>

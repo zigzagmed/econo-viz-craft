@@ -8,7 +8,6 @@ interface VariableRoles {
   size?: string;
   series?: string;
   groupBy?: string;
-  bins?: string;
   variables?: string[];
   histogramBins?: number;
 }
