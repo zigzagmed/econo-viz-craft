@@ -10,6 +10,7 @@ interface VariableRoles {
   groupBy?: string;
   bins?: string;
   variables?: string[];
+  statistic?: string;
 }
 
 export const generateChartStatistics = (
@@ -21,6 +22,47 @@ export const generateChartStatistics = (
   const stats: Record<string, any> = {};
 
   switch (chartType) {
+    case 'bar':
+      if (variableRoles.xAxis && variableRoles.yAxis && variableRoles.statistic) {
+        // Group data by X-axis categories and calculate the selected statistic
+        const grouped = data.reduce((acc, item) => {
+          const key = item[variableRoles.xAxis!];
+          if (!acc[key]) acc[key] = [];
+          if (item[variableRoles.yAxis!] != null) {
+            acc[key].push(item[variableRoles.yAxis!]);
+          }
+          return acc;
+        }, {} as Record<string, number[]>);
+
+        // Calculate statistic for each category
+        Object.entries(grouped).forEach(([category, values]) => {
+          if (values.length > 0) {
+            let result;
+            switch (variableRoles.statistic) {
+              case 'sum':
+                result = values.reduce((sum, val) => sum + val, 0);
+                break;
+              case 'average':
+                result = values.reduce((sum, val) => sum + val, 0) / values.length;
+                break;
+              case 'count':
+                result = values.length;
+                break;
+              case 'min':
+                result = Math.min(...values);
+                break;
+              case 'max':
+                result = Math.max(...values);
+                break;
+              default:
+                result = values.length;
+            }
+            stats[category] = { value: result };
+          }
+        });
+      }
+      break;
+
     case 'scatter':
     case 'regression':
       if (variableRoles.xAxis && variableRoles.yAxis) {
@@ -42,31 +84,30 @@ export const generateChartStatistics = (
         const histValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
         const histMin = Math.min(...histValues);
         const histMax = Math.max(...histValues);
-        const mean = histValues.reduce((sum, val) => sum + val, 0) / histValues.length;
-        const variance = histValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / histValues.length;
+        const binCount = chartConfig.histogramBins || 10;
+        const binWidth = (histMax - histMin) / binCount;
         
-        stats['Sample Size'] = { value: histValues.length };
-        stats['Mean'] = { value: mean };
-        stats['Std Deviation'] = { value: Math.sqrt(variance) };
-        stats['Min Value'] = { value: histMin };
-        stats['Max Value'] = { value: histMax };
-        stats['Number of Bins'] = { value: chartConfig.histogramBins || 10 };
-      }
-      break;
-
-    case 'bar':
-      if (variableRoles.xAxis) {
-        const categories = [...new Set(data.map(d => d[variableRoles.xAxis!]))];
-        const totalCount = data.length;
+        // Create bins and count frequencies
+        const bins: Record<string, number> = {};
+        for (let i = 0; i < binCount; i++) {
+          const binStart = histMin + i * binWidth;
+          const binEnd = binStart + binWidth;
+          const binLabel = `${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
+          bins[binLabel] = 0;
+        }
         
-        stats['Total Records'] = { value: totalCount };
-        stats['Categories'] = { value: categories.length };
-        stats['Most Frequent'] = { 
-          value: categories.reduce((max, cat) => {
-            const count = data.filter(d => d[variableRoles.xAxis!] === cat).length;
-            return count > (data.filter(d => d[variableRoles.xAxis!] === max).length || 0) ? cat : max;
-          }, categories[0])
-        };
+        // Count values in each bin
+        histValues.forEach(value => {
+          const binIndex = Math.min(Math.floor((value - histMin) / binWidth), binCount - 1);
+          const binStart = histMin + binIndex * binWidth;
+          const binEnd = binStart + binWidth;
+          const binLabel = `${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
+          bins[binLabel]++;
+        });
+        
+        Object.entries(bins).forEach(([binLabel, count]) => {
+          stats[binLabel] = { value: count };
+        });
       }
       break;
 
@@ -78,14 +119,12 @@ export const generateChartStatistics = (
           return acc;
         }, {} as Record<string, number>);
         
-        const categories = Object.keys(pieData);
-        const maxCategory = categories.reduce((max, cat) => 
-          pieData[cat] > pieData[max] ? cat : max, categories[0]);
+        const total = Object.values(pieData).reduce((sum, count) => sum + count, 0);
         
-        stats['Total Records'] = { value: data.length };
-        stats['Categories'] = { value: categories.length };
-        stats['Largest Segment'] = { value: maxCategory };
-        stats['Largest %'] = { value: (pieData[maxCategory] / data.length) * 100 };
+        Object.entries(pieData).forEach(([category, count]) => {
+          const percentage = (count / total) * 100;
+          stats[category] = { value: `${count} (${percentage.toFixed(1)}%)` };
+        });
       }
       break;
 
@@ -97,59 +136,49 @@ export const generateChartStatistics = (
         const q3 = boxplotValues[Math.floor(boxplotValues.length * 0.75)];
         const iqr = q3 - q1;
         
-        stats['Sample Size'] = { value: boxplotValues.length };
-        stats['Median'] = { value: median };
         stats['Q1'] = { value: q1 };
+        stats['Median'] = { value: median };
         stats['Q3'] = { value: q3 };
         stats['IQR'] = { value: iqr };
-        stats['Min Value'] = { value: boxplotValues[0] };
-        stats['Max Value'] = { value: boxplotValues[boxplotValues.length - 1] };
+        stats['Min'] = { value: boxplotValues[0] };
+        stats['Max'] = { value: boxplotValues[boxplotValues.length - 1] };
       }
       break;
 
     case 'line':
       if (variableRoles.xAxis && variableRoles.yAxis) {
+        // Show data points or key statistics
         const yValues = data.map(d => d[variableRoles.yAxis!]).filter(v => v != null);
-        const trend = yValues.length > 1 ? 
-          (yValues[yValues.length - 1] - yValues[0]) / (yValues.length - 1) : 0;
+        const xValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
         
-        stats['Data Points'] = { value: yValues.length };
-        stats['Max Value'] = { value: Math.max(...yValues) };
-        stats['Min Value'] = { value: Math.min(...yValues) };
-        stats['Average Trend'] = { value: trend };
+        // Show first few and last few data points
+        const sortedData = data
+          .filter(d => d[variableRoles.xAxis!] != null && d[variableRoles.yAxis!] != null)
+          .sort((a, b) => a[variableRoles.xAxis!] - b[variableRoles.xAxis!]);
+        
+        if (sortedData.length > 0) {
+          stats['Start Value'] = { value: sortedData[0][variableRoles.yAxis!] };
+          stats['End Value'] = { value: sortedData[sortedData.length - 1][variableRoles.yAxis!] };
+          stats['Max Value'] = { value: Math.max(...yValues) };
+          stats['Min Value'] = { value: Math.min(...yValues) };
+        }
       }
       break;
 
     case 'correlation':
       if (variableRoles.variables && variableRoles.variables.length >= 2) {
         const variables = variableRoles.variables;
-        let maxCorr = -1;
-        let minCorr = 1;
-        let maxPair = '';
-        let minPair = '';
         
+        // Show correlation coefficients between all pairs
         for (let i = 0; i < variables.length; i++) {
           for (let j = i + 1; j < variables.length; j++) {
             const values1 = data.map(d => d[variables[i]]).filter(v => v != null);
             const values2 = data.map(d => d[variables[j]]).filter(v => v != null);
             const corr = calculateCorrelation(values1, values2);
             
-            if (Math.abs(corr) > Math.abs(maxCorr)) {
-              maxCorr = corr;
-              maxPair = `${variables[i]} - ${variables[j]}`;
-            }
-            if (Math.abs(corr) < Math.abs(minCorr)) {
-              minCorr = corr;
-              minPair = `${variables[i]} - ${variables[j]}`;
-            }
+            stats[`${variables[i]} × ${variables[j]}`] = { value: corr };
           }
         }
-        
-        stats['Variables'] = { value: variables.length };
-        stats['Strongest Correlation'] = { value: maxCorr };
-        stats['Strongest Pair'] = { value: maxPair };
-        stats['Weakest Correlation'] = { value: minCorr };
-        stats['Weakest Pair'] = { value: minPair };
       }
       break;
 

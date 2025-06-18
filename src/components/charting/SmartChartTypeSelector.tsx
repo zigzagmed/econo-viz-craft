@@ -178,21 +178,25 @@ export const SmartChartTypeSelector: React.FC<SmartChartTypeSelectorProps> = ({
               key={chart.id}
               variant={isSelected ? "default" : "outline"}
               className={`h-auto p-4 flex items-center gap-3 justify-start ${
-                chart.recommended ? 'border-blue-200 bg-blue-50' : ''
+                isSelected 
+                  ? 'bg-blue-900 hover:bg-blue-800 text-white' 
+                  : chart.recommended 
+                    ? 'border-blue-200 bg-blue-50 hover:bg-blue-100' 
+                    : 'hover:bg-gray-50'
               }`}
               onClick={() => onTypeChange(chart.id)}
             >
-              <Icon className="w-5 h-5 flex-shrink-0" />
+              <Icon className={`w-5 h-5 flex-shrink-0 ${isSelected ? 'text-white' : ''}`} />
               <div className="flex-1 text-left">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium">{chart.name}</span>
-                  {chart.recommended && (
+                  <span className={`font-medium ${isSelected ? 'text-white' : ''}`}>{chart.name}</span>
+                  {chart.recommended && !isSelected && (
                     <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
                       Recommended
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-gray-600">{chart.description}</p>
+                <p className={`text-xs ${isSelected ? 'text-blue-100' : 'text-gray-600'}`}>{chart.description}</p>
               </div>
             </Button>
           );
