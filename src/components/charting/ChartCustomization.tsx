@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,11 +50,11 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   };
 
   const colorSchemes = [
-    { id: 'academic', name: 'Academic', description: 'Professional colors' },
-    { id: 'colorblind', name: 'Colorblind Safe', description: 'Accessible palette' },
-    { id: 'grayscale', name: 'Grayscale', description: 'Black and white' },
-    { id: 'vibrant', name: 'Vibrant', description: 'Bright colors' },
-    { id: 'custom', name: 'Custom', description: 'Choose your own colors' }
+    { id: 'academic', name: 'Academic (Professional colors)' },
+    { id: 'colorblind', name: 'Colorblind Safe (Accessible palette)' },
+    { id: 'grayscale', name: 'Grayscale (Black and white)' },
+    { id: 'vibrant', name: 'Vibrant (Bright colors)' },
+    { id: 'custom', name: 'Custom (Choose your own colors)' }
   ];
 
   const handleColorSchemeChange = (value: string) => {
@@ -90,16 +91,6 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
 
   const showTrendLineOption = ['scatter', 'regression', 'line'].includes(chartType);
   const showStatsOption = !['pie'].includes(chartType);
-  const showColorVariable = ['bar', 'scatter', 'line'].includes(chartType);
-
-  // Get available variables for color mapping (excluding already selected ones)
-  const colorVariableOptions = availableVariables.filter(variable => 
-    !selectedVariables.includes(variable)
-  );
-
-  const handleColorVariableChange = (value: string) => {
-    updateLocalConfig('colorVariable', value === 'none' ? undefined : value);
-  };
 
   return (
     <div className="space-y-4 max-h-[70vh] overflow-y-auto">
@@ -132,36 +123,6 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
 
       <Separator />
 
-      {showColorVariable && colorVariableOptions.length > 0 && (
-        <>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Color Variable</Label>
-            <Select 
-              value={localConfig.colorVariable || 'none'} 
-              onValueChange={handleColorVariableChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select variable for coloring (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">None</SelectItem>
-                {colorVariableOptions.map((variable) => (
-                  <SelectItem key={variable} value={variable}>
-                    {variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {localConfig.colorVariable && (
-              <p className="text-xs text-gray-500">
-                Chart elements will be colored based on {localConfig.colorVariable} values
-              </p>
-            )}
-          </div>
-          <Separator />
-        </>
-      )}
-
       <div className="space-y-2">
         <Label className="text-sm font-medium">Color Scheme</Label>
         <Select value={localConfig.colorScheme} onValueChange={handleColorSchemeChange}>
@@ -171,10 +132,7 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
           <SelectContent>
             {colorSchemes.map((scheme) => (
               <SelectItem key={scheme.id} value={scheme.id}>
-                <div className="flex flex-col">
-                  <span>{scheme.name}</span>
-                  <span className="text-xs text-gray-500">{scheme.description}</span>
-                </div>
+                {scheme.name}
               </SelectItem>
             ))}
           </SelectContent>
