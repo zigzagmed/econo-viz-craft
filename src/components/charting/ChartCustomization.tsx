@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +18,11 @@ interface ChartCustomizationProps {
     showStats: boolean;
     showTrendLine: boolean;
     colorVariable?: string;
+    histogramBins?: number;
+    titlePosition?: 'top' | 'center';
+    xAxisLabelDistance?: number;
+    yAxisLabelDistance?: number;
+    statsDecimals?: number;
   };
   onConfigChange: (config: any) => void;
   chartType: string;
@@ -35,7 +39,14 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   availableVariables = [],
   onClose
 }) => {
-  const [localConfig, setLocalConfig] = useState(config);
+  const [localConfig, setLocalConfig] = useState({
+    titlePosition: 'top' as 'top' | 'center',
+    xAxisLabelDistance: 30,
+    yAxisLabelDistance: 50,
+    histogramBins: 20,
+    statsDecimals: 2,
+    ...config
+  });
   const [showCustomColors, setShowCustomColors] = useState(config.colorScheme === 'custom');
   const [customColors, setCustomColors] = useState(config.customColors || ['#2563eb', '#dc2626', '#16a34a']);
 
@@ -91,6 +102,7 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   };
 
   const showStatsOption = !['pie'].includes(chartType);
+  const showHistogramBins = chartType === 'histogram';
 
   return (
     <div className="space-y-4">
@@ -104,11 +116,36 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
       </div>
 
       <div className="space-y-2">
+        <Label className="text-sm font-medium">Title Position</Label>
+        <Select value={localConfig.titlePosition} onValueChange={(value) => updateLocalConfig('titlePosition', value)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="top">Top</SelectItem>
+            <SelectItem value="center">Center</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
         <Label className="text-sm font-medium">X-Axis Label</Label>
         <Input
           value={localConfig.xAxisLabel}
           onChange={(e) => updateLocalConfig('xAxisLabel', e.target.value)}
           placeholder="X-axis label"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">X-Axis Label Distance</Label>
+        <Input
+          type="number"
+          value={localConfig.xAxisLabelDistance}
+          onChange={(e) => updateLocalConfig('xAxisLabelDistance', parseInt(e.target.value) || 30)}
+          placeholder="Distance from axis"
+          min="10"
+          max="100"
         />
       </div>
 
@@ -120,6 +157,32 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
           placeholder="Y-axis label"
         />
       </div>
+
+      <div className="space-y-2">
+        <Label className="text-sm font-medium">Y-Axis Label Distance</Label>
+        <Input
+          type="number"
+          value={localConfig.yAxisLabelDistance}
+          onChange={(e) => updateLocalConfig('yAxisLabelDistance', parseInt(e.target.value) || 50)}
+          placeholder="Distance from axis"
+          min="20"
+          max="100"
+        />
+      </div>
+
+      {showHistogramBins && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Number of Bins</Label>
+          <Input
+            type="number"
+            value={localConfig.histogramBins}
+            onChange={(e) => updateLocalConfig('histogramBins', parseInt(e.target.value) || 20)}
+            placeholder="Number of histogram bins"
+            min="5"
+            max="100"
+          />
+        </div>
+      )}
 
       <Separator />
 
@@ -193,18 +256,40 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
         <Label className="text-sm font-medium">Display Options</Label>
         
         {showStatsOption && (
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="showStats"
-              checked={localConfig.showStats}
-              onCheckedChange={(checked) => updateLocalConfig('showStats', checked)}
-            />
-            <Label htmlFor="showStats" className="text-sm">Show Statistics</Label>
-          </div>
+          <>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="showStats"
+                checked={localConfig.showStats}
+                onCheckedChange={(checked) => updateLocalConfig('showStats', checked)}
+              />
+              <Label htmlFor="showStats" className="text-sm">Show Statistics</Label>
+            </div>
+            
+            {localConfig.showStats && (
+              <div className="ml-6 space-y-2">
+                <Label className="text-sm">Decimal Places</Label>
+                <Select 
+                  value={localConfig.statsDecimals?.toString()} 
+                  onValueChange={(value) => updateLocalConfig('statsDecimals', parseInt(value))}
+                >
+                  <SelectTrigger className="w-24">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0</SelectItem>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* Apply Button - At the bottom */}
       <Separator />
       <div className="flex justify-end pt-2">
         <Button onClick={handleApply} className="w-full">
@@ -214,4 +299,3 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
     </div>
   );
 };
-

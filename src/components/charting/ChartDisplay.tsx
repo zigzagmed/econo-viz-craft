@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyChartState } from './EmptyChartState';
@@ -6,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ChartCustomization } from './ChartCustomization';
 import { Download, Settings } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { StatisticsTable } from './StatisticsTable';
 
 interface VariableRoles {
   xAxis?: string;
@@ -57,95 +58,75 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
   const selectedVariables = Object.values(variableRoles).filter(Boolean) as string[];
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">
-            {canShowChart ? chartTitle : 'Your Chart'}
-          </CardTitle>
-          {canShowChart && (
-            <div className="flex gap-2">
-              <Dialog open={customizationOpen} onOpenChange={setCustomizationOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Settings className="w-4 h-4 mr-1" />
-                    Customize
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-lg max-h-[80vh]">
-                  <DialogHeader>
-                    <DialogTitle>Customize Chart</DialogTitle>
-                  </DialogHeader>
-                  <ChartCustomization
-                    config={chartConfig}
-                    onConfigChange={onConfigChange}
-                    chartType={chartType}
-                    selectedVariables={selectedVariables}
-                    availableVariables={availableVariables}
-                    onClose={() => setCustomizationOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-
-              <Dialog open={exportOpen} onOpenChange={setExportOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Download className="w-4 h-4 mr-1" />
-                    Export
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-sm">
-                  <DialogHeader>
-                    <DialogTitle>Export Chart</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                      Choose the format to export your chart:
-                    </p>
-                    <div className="flex gap-3">
-                      <Button
-                        onClick={() => {
-                          onExportChart('png');
-                          setExportOpen(false);
-                        }}
-                        className="flex-1"
-                      >
-                        Export as PNG
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          onExportChart('svg');
-                          setExportOpen(false);
-                        }}
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        Export as SVG
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          )}
+    <Card className="h-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-4">
+        <CardTitle className="text-xl">{chartTitle}</CardTitle>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCustomizationOpen(true)}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Customize
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => onExportChart('png')}>
+                Export as PNG
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onExportChart('svg')}>
+                Export as SVG
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent>
-        {!canShowChart ? (
-          <EmptyChartState />
+
+      <CardContent className="h-[500px] p-4">
+        {canShowChart ? (
+          <div ref={chartRef} className="w-full h-full" />
         ) : (
-          <div className="w-full">
-            <div 
-              ref={chartRef} 
-              className="w-full border border-gray-200 rounded-lg bg-white"
-              style={{ 
-                height: '500px', 
-                minHeight: '500px'
-              }}
-            />
-          </div>
+          <EmptyChartState />
         )}
       </CardContent>
+
+      {/* Statistics Table */}
+      {canShowChart && chartConfig.showStats && (
+        <div className="px-6 pb-6">
+          <StatisticsTable 
+            statistics={(() => {
+              const allVariables = Object.values(variableRoles).filter(Boolean).flat() as string[];
+              const data = getVariableData(selectedDataset, allVariables);
+              return calculateStatistics(data || [], allVariables);
+            })()}
+            decimals={chartConfig.statsDecimals || 2}
+          />
+        </div>
+      )}
+
+      {/* Customization Dialog */}
+      <Dialog open={customizationOpen} onOpenChange={setCustomizationOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Customize Chart</DialogTitle>
+          </DialogHeader>
+          <ChartCustomization
+            config={chartConfig}
+            onConfigChange={onConfigChange}
+            chartType={chartType}
+            selectedVariables={Object.values(variableRoles).filter(Boolean) as string[]}
+            availableVariables={getDatasetInfo(selectedDataset)?.variables.map(v => v.name) || []}
+            onClose={() => setCustomizationOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

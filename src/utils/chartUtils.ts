@@ -1,4 +1,4 @@
-import { calculateCorrelation, calculateRegression } from './statisticalUtils';
+import * as echarts from 'echarts';
 
 interface VariableRoles {
   xAxis?: string;
@@ -7,576 +7,374 @@ interface VariableRoles {
   size?: string;
   series?: string;
   groupBy?: string;
+  bins?: string;
   variables?: string[];
 }
 
-const colorSchemes = {
-  academic: ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'],
-  colorblind: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b'],
-  grayscale: ['#374151', '#6b7280', '#9ca3af', '#d1d5db', '#e5e7eb', '#f3f4f6'],
-  vibrant: ['#f59e0b', '#ef4444', '#10b981', '#3b82f6', '#8b5cf6', '#f97316']
+const calculateCorrelation = (x: number[], y: number[]): number => {
+  if (x.length !== y.length || x.length === 0) return 0;
+
+  const n = x.length;
+  const sumX = x.reduce((a, b) => a + b, 0);
+  const sumY = y.reduce((a, b) => a + b, 0);
+  const sumXY = x.reduce((a, b, i) => a + b * y[i], 0);
+  const sumX2 = x.reduce((a, b) => a + b * b, 0);
+  const sumY2 = y.reduce((a, b) => a + b * b, 0);
+
+  const numerator = n * sumXY - sumX * sumY;
+  const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+
+  return denominator === 0 ? 0 : numerator / denominator;
+};
+
+const getColorPalette = (scheme: string, customColors?: string[]): string[] => {
+  switch (scheme) {
+    case 'colorblind':
+      return ['#377eb8', '#ff7f00', '#4daf4a', '#f781bf', '#a65628', '#984ea3', '#999999', '#e41a1c', '#dede00'];
+    case 'grayscale':
+      return ['#333333', '#777777', '#AAAAAA', '#DDDDDD'];
+    case 'vibrant':
+      return ['#FF5733', '#33FF57', '#3366FF', '#FF33CC', '#33FFFF'];
+    case 'custom':
+      return customColors || ['#2563eb', '#dc2626', '#16a34a'];
+    default: // 'academic'
+      return ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
+  }
 };
 
 export const generateChartConfig = (
   chartType: string,
   data: any[],
   variableRoles: VariableRoles,
-  config: any,
-  stats: Record<string, any>
-) => {
-  // Use custom colors if available, otherwise fall back to preset schemes
-  const colors = config.customColors && config.colorScheme === 'custom' 
-    ? config.customColors 
-    : colorSchemes[config.colorScheme as keyof typeof colorSchemes] || colorSchemes.academic;
+  chartConfig: any,
+  stats: any
+): any => {
+  console.log('Generating chart config for type:', chartType);
+  console.log('Variable roles:', variableRoles);
+  console.log('Chart config:', chartConfig);
+
+  const colors = getColorPalette(chartConfig.colorScheme, chartConfig.customColors);
   
-  const baseOption = {
-    title: {
-      text: config.title,
-      left: 'center',
-      textStyle: {
-        fontSize: 16,
-        fontWeight: 'bold'
-      }
-    },
-    backgroundColor: '#ffffff',
-    animation: true
+  // Common title configuration with positioning
+  const titleConfig = {
+    text: chartConfig.title || 'Chart',
+    left: 'center',
+    top: chartConfig.titlePosition === 'center' ? 'middle' : 20,
+    textStyle: {
+      fontSize: 18,
+      fontWeight: 'bold'
+    }
   };
+
+  // Common axis label configuration with custom distances
+  const getAxisLabelConfig = (label: string, isVertical: boolean) => ({
+    name: label,
+    nameLocation: 'middle',
+    nameGap: isVertical ? (chartConfig.yAxisLabelDistance || 50) : (chartConfig.xAxisLabelDistance || 30),
+    nameTextStyle: {
+      fontSize: 14,
+      fontWeight: 'normal'
+    }
+  });
 
   switch (chartType) {
-    case 'bar':
-      return generateBarChart(data, variableRoles, config, colors, baseOption);
-    case 'line':
-      return generateLineChart(data, variableRoles, config, colors, baseOption);
     case 'scatter':
     case 'regression':
-      return generateScatterChart(data, variableRoles, config, colors, baseOption, chartType === 'regression');
-    case 'histogram':
-      return generateHistogram(data, variableRoles, config, colors, baseOption);
-    case 'boxplot':
-      return generateBoxPlot(data, variableRoles, config, colors, baseOption);
-    case 'correlation':
-      return generateCorrelationMatrix(data, variableRoles, config, colors, baseOption);
-    case 'pie':
-      return generatePieChart(data, variableRoles.xAxis!, config, colors, baseOption);
-    default:
-      return baseOption;
-  }
-};
-
-const generateBarChart = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
-  const xVar = variableRoles.xAxis!;
-  const yVar = variableRoles.yAxis || variableRoles.xAxis!;
-  const colorVar = variableRoles.color;
-  
-  // Aggregate data for categorical x-axis
-  const aggregated = data.reduce((acc, item) => {
-    const key = item[xVar];
-    const colorKey = colorVar ? item[colorVar] : 'default';
-    
-    if (!acc[key]) {
-      acc[key] = {};
-    }
-    if (!acc[key][colorKey]) {
-      acc[key][colorKey] = { count: 0, sum: 0 };
-    }
-    acc[key][colorKey].count += 1;
-    acc[key][colorKey].sum += parseFloat(item[yVar]) || 0;
-    return acc;
-  }, {});
-
-  const categories = Object.keys(aggregated);
-  
-  if (colorVar) {
-    // Get unique color values
-    const colorValues = [...new Set(data.map(item => item[colorVar]))];
-    
-    const series = colorValues.map((colorValue, colorIndex) => ({
-      name: colorValue,
-      type: 'bar',
-      data: categories.map(category => {
-        const categoryData = aggregated[category][colorValue];
-        if (!categoryData) return 0;
-        return !variableRoles.yAxis ? categoryData.count : categoryData.sum / categoryData.count;
-      }),
-      itemStyle: {
-        color: colors[colorIndex % colors.length]
-      }
-    }));
-
-    return {
-      ...baseOption,
-      xAxis: {
-        type: 'category',
-        data: categories,
-        name: config.xAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 30
-      },
-      yAxis: {
-        type: 'value',
-        name: config.yAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 50
-      },
-      series,
-      legend: {
-        top: 30
-      },
-      tooltip: {
-        trigger: 'axis'
-      }
-    };
-  } else {
-    // Original single-color bar chart logic
-    const values = categories.map(key => {
-      const categoryData = Object.values(aggregated[key] as any)[0] as any;
-      return !variableRoles.yAxis ? categoryData.count : categoryData.sum / categoryData.count;
-    });
-
-    return {
-      ...baseOption,
-      xAxis: {
-        type: 'category',
-        data: categories,
-        name: config.xAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 30
-      },
-      yAxis: {
-        type: 'value',
-        name: config.yAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 50
-      },
-      series: [{
-        data: values,
-        type: 'bar',
-        itemStyle: {
-          color: colors[0]
-        }
-      }],
-      tooltip: {
-        trigger: 'axis'
-      }
-    };
-  }
-};
-
-const generateLineChart = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
-  const xVar = variableRoles.xAxis!;
-  const yVar = variableRoles.yAxis!;
-  const groupByVar = variableRoles.groupBy;
-  const sortedData = [...data].sort((a, b) => a[xVar] - b[xVar]);
-  
-  const series = [];
-  
-  if (groupByVar) {
-    // Group data by the groupBy variable and create separate lines
-    const groupValues = [...new Set(data.map(item => item[groupByVar]))];
-    
-    groupValues.forEach((groupValue, index) => {
-      const filteredData = sortedData.filter(item => item[groupByVar] === groupValue);
-      series.push({
-        name: `${yVar} (${groupValue})`,
-        data: filteredData.map(item => [item[xVar], item[yVar]]),
-        type: 'line',
-        itemStyle: {
-          color: colors[index % colors.length]
-        }
-      });
-    });
-  } else {
-    // Single line: Y vs X
-    series.push({
-      name: yVar,
-      data: sortedData.map(item => [item[xVar], item[yVar]]),
-      type: 'line',
-      itemStyle: {
-        color: colors[0]
-      }
-    });
-  }
-
-  return {
-    ...baseOption,
-    xAxis: {
-      type: 'value',
-      name: config.xAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 30
-    },
-    yAxis: {
-      type: 'value',
-      name: config.yAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 50
-    },
-    series,
-    legend: series.length > 1 ? { top: 30 } : undefined,
-    tooltip: {
-      trigger: 'axis'
-    }
-  };
-};
-
-const generateScatterChart = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any, showRegression: boolean) => {
-  const xVar = variableRoles.xAxis!;
-  const yVar = variableRoles.yAxis!;
-  const colorVar = variableRoles.color;
-  const sizeVar = variableRoles.size;
-  
-  if (colorVar) {
-    // Group data by color variable
-    const colorValues = [...new Set(data.map(item => item[colorVar]))];
-    
-    const series = colorValues.map((colorValue, colorIndex) => {
-      const filteredData = data.filter(item => item[colorVar] === colorValue);
-      const scatterData = filteredData.map(item => {
-        const point = [item[xVar], item[yVar]];
-        if (sizeVar) {
-          point.push(item[sizeVar]);
-        }
-        return point;
-      });
+      if (!variableRoles.xAxis || !variableRoles.yAxis) return {};
+      
+      const scatterData = data.map(d => [d[variableRoles.xAxis!], d[variableRoles.yAxis!]]);
       
       return {
-        name: colorValue,
-        data: scatterData,
-        type: 'scatter',
-        itemStyle: {
-          color: colors[colorIndex % colors.length]
-        }
+        title: titleConfig,
+        tooltip: {
+          trigger: 'item',
+          formatter: (params: any) => {
+            return `${variableRoles.xAxis}: ${params.data[0]}<br/>${variableRoles.yAxis}: ${params.data[1]}`;
+          }
+        },
+        xAxis: {
+          type: 'value',
+          ...getAxisLabelConfig(chartConfig.xAxisLabel, false)
+        },
+        yAxis: {
+          type: 'value',
+          ...getAxisLabelConfig(chartConfig.yAxisLabel, true)
+        },
+        series: [{
+          type: 'scatter',
+          data: scatterData,
+          itemStyle: {
+            color: colors[0]
+          }
+        }]
       };
-    });
 
-    return {
-      ...baseOption,
-      xAxis: {
-        type: 'value',
-        name: config.xAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 30
-      },
-      yAxis: {
-        type: 'value',
-        name: config.yAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 50
-      },
-      series,
-      legend: {
-        top: 30
-      },
-      tooltip: {
-        trigger: 'item'
-      }
-    };
-  } else {
-    // Original single-color scatter chart logic
-    const scatterData = data.map(item => {
-      const point = [item[xVar], item[yVar]];
-      if (sizeVar) {
-        point.push(item[sizeVar]);
-      }
-      return point;
-    });
-    
-    const series = [{
-      data: scatterData,
-      type: 'scatter',
-      itemStyle: {
-        color: colors[0]
-      }
-    }];
-
-    // Show trend line for regression charts by default, or when explicitly enabled
-    if (showRegression || config.showTrendLine) {
-      const xValues = data.map(item => parseFloat(item[xVar]));
-      const yValues = data.map(item => parseFloat(item[yVar]));
-      const regression = calculateRegression(xValues, yValues);
+    case 'line':
+      if (!variableRoles.xAxis || !variableRoles.yAxis) return {};
       
-      const minX = Math.min(...xValues);
-      const maxX = Math.max(...xValues);
-      const lineData = [
-        [minX, regression.slope * minX + regression.intercept],
-        [maxX, regression.slope * maxX + regression.intercept]
-      ];
+      if (variableRoles.groupBy) {
+        // Group data by the groupBy variable
+        const grouped = data.reduce((acc, item) => {
+          const groupValue = item[variableRoles.groupBy!];
+          if (!acc[groupValue]) acc[groupValue] = [];
+          acc[groupValue].push(item);
+          return acc;
+        }, {} as Record<string, any[]>);
 
-      series.push({
-        data: lineData,
-        type: 'line',
-        smooth: false,
-        name: `Trend Line (R² = ${regression.r2.toFixed(3)})`,
-        itemStyle: {
-          color: colors[1] || colors[0]
+        const series = Object.keys(grouped).map((group, index) => ({
+          name: group,
+          type: 'line',
+          data: grouped[group].map(d => [d[variableRoles.xAxis!], d[variableRoles.yAxis!]]),
+          itemStyle: { color: colors[index % colors.length] },
+          lineStyle: { color: colors[index % colors.length] }
+        }));
+
+        return {
+          title: titleConfig,
+          tooltip: { trigger: 'axis' },
+          legend: { data: Object.keys(grouped) },
+          xAxis: {
+            type: 'value',
+            ...getAxisLabelConfig(chartConfig.xAxisLabel, false)
+          },
+          yAxis: {
+            type: 'value',
+            ...getAxisLabelConfig(chartConfig.yAxisLabel, true)
+          },
+          series
+        };
+      } else {
+        const lineData = data.map(d => [d[variableRoles.xAxis!], d[variableRoles.yAxis!]]);
+        
+        return {
+          title: titleConfig,
+          tooltip: { trigger: 'axis' },
+          xAxis: {
+            type: 'value',
+            ...getAxisLabelConfig(chartConfig.xAxisLabel, false)
+          },
+          yAxis: {
+            type: 'value',
+            ...getAxisLabelConfig(chartConfig.yAxisLabel, true)
+          },
+          series: [{
+            type: 'line',
+            data: lineData,
+            itemStyle: { color: colors[0] },
+            lineStyle: { color: colors[0] }
+          }]
+        };
+      }
+
+    case 'bar':
+      if (!variableRoles.xAxis) return {};
+      
+      const barData = data.reduce((acc, item) => {
+        const key = item[variableRoles.xAxis!];
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+      }, {} as Record<string, any[]>);
+
+      const categories = Object.keys(barData);
+      const values = categories.map(cat => barData[cat].length);
+
+      return {
+        title: titleConfig,
+        tooltip: { trigger: 'axis' },
+        xAxis: {
+          type: 'category',
+          data: categories,
+          ...getAxisLabelConfig(chartConfig.xAxisLabel, false)
         },
-        lineStyle: {
-          type: 'dashed'
+        yAxis: {
+          type: 'value',
+          ...getAxisLabelConfig(chartConfig.yAxisLabel, true)
         },
-        symbol: 'none'
-      } as any);
-    }
+        series: [{
+          type: 'bar',
+          data: values,
+          itemStyle: { color: colors[0] }
+        }]
+      };
 
-    return {
-      ...baseOption,
-      xAxis: {
-        type: 'value',
-        name: config.xAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 30
-      },
-      yAxis: {
-        type: 'value',
-        name: config.yAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 50
-      },
-      series,
-      legend: showRegression || config.showTrendLine ? { top: 30 } : undefined,
-      tooltip: {
-        trigger: 'item'
-      }
-    };
-  }
-};
-
-const generateHistogram = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
-  const variable = variableRoles.xAxis!;
-  const values = data.map(item => parseFloat(item[variable])).filter(val => !isNaN(val));
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const bins = config.histogramBins || 20;
-  const binSize = (max - min) / bins;
-  
-  const histogram = new Array(bins).fill(0);
-  const binLabels = [];
-  
-  for (let i = 0; i < bins; i++) {
-    const binStart = min + i * binSize;
-    const binEnd = min + (i + 1) * binSize;
-    binLabels.push(`${binStart.toFixed(1)}-${binEnd.toFixed(1)}`);
-    
-    values.forEach(value => {
-      if (value >= binStart && (value < binEnd || (i === bins - 1 && value === binEnd))) {
-        histogram[i]++;
-      }
-    });
-  }
-
-  return {
-    ...baseOption,
-    xAxis: {
-      type: 'category',
-      data: binLabels,
-      name: config.xAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 30
-    },
-    yAxis: {
-      type: 'value',
-      name: 'Frequency',
-      nameLocation: 'middle',
-      nameGap: 50
-    },
-    series: [{
-      data: histogram,
-      type: 'bar',
-      itemStyle: {
-        color: colors[0]
-      }
-    }],
-    tooltip: {
-      trigger: 'axis'
-    }
-  };
-};
-
-const generateBoxPlot = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
-  const variable = variableRoles.xAxis!;
-  const colorVar = variableRoles.color;
-  
-  if (colorVar) {
-    // Group by color variable
-    const colorValues = [...new Set(data.map(item => item[colorVar]))];
-    const boxData = colorValues.map(colorValue => {
-      const filteredData = data.filter(item => item[colorVar] === colorValue);
-      const values = filteredData.map(item => parseFloat(item[variable])).filter(val => !isNaN(val)).sort((a, b) => a - b);
-      const q1 = values[Math.floor(values.length * 0.25)];
-      const median = values[Math.floor(values.length * 0.5)];
-      const q3 = values[Math.floor(values.length * 0.75)];
-      const min = values[0];
-      const max = values[values.length - 1];
+    case 'histogram':
+      if (!variableRoles.xAxis) return {};
       
-      return [min, q1, median, q3, max];
-    });
-
-    return {
-      ...baseOption,
-      xAxis: {
-        type: 'category',
-        data: colorValues,
-        name: config.xAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 30
-      },
-      yAxis: {
-        type: 'value',
-        name: config.yAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 50
-      },
-      series: [{
-        data: boxData,
-        type: 'boxplot',
-        itemStyle: {
-          color: colors[0]
-        }
-      }],
-      tooltip: {
-        trigger: 'item'
-      }
-    };
-  } else {
-    // Single box plot
-    const values = data.map(item => parseFloat(item[variable])).filter(val => !isNaN(val)).sort((a, b) => a - b);
-    const q1 = values[Math.floor(values.length * 0.25)];
-    const median = values[Math.floor(values.length * 0.5)];
-    const q3 = values[Math.floor(values.length * 0.75)];
-    const min = values[0];
-    const max = values[values.length - 1];
-    
-    const boxData = [[min, q1, median, q3, max]];
-
-    return {
-      ...baseOption,
-      xAxis: {
-        type: 'category',
-        data: [variable],
-        name: config.xAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 30
-      },
-      yAxis: {
-        type: 'value',
-        name: config.yAxisLabel,
-        nameLocation: 'middle',
-        nameGap: 50
-      },
-      series: [{
-        data: boxData,
-        type: 'boxplot',
-        itemStyle: {
-          color: colors[0]
-        }
-      }],
-      tooltip: {
-        trigger: 'item'
-      }
-    };
-  }
-};
-
-const generateCorrelationMatrix = (data: any[], variableRoles: VariableRoles, config: any, colors: string[], baseOption: any) => {
-  // Use the selected variables array for correlation
-  const variables = variableRoles.variables || [];
-  
-  if (variables.length < 2) {
-    return {
-      ...baseOption,
-      title: {
-        text: 'Select at least 2 variables for correlation matrix',
-        left: 'center',
-        top: 'middle',
-        textStyle: {
-          fontSize: 16,
-          color: '#999'
-        }
-      }
-    };
-  }
-  
-  const correlationData = [];
-  
-  for (let i = 0; i < variables.length; i++) {
-    for (let j = 0; j < variables.length; j++) {
-      const xValues = data.map(item => parseFloat(item[variables[i]])).filter(val => !isNaN(val));
-      const yValues = data.map(item => parseFloat(item[variables[j]])).filter(val => !isNaN(val));
-      const correlation = i === j ? 1 : calculateCorrelation(xValues, yValues);
+      const values = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const binCount = chartConfig.histogramBins || 20;
+      const binWidth = (max - min) / binCount;
       
-      correlationData.push([i, j, correlation]);
-    }
+      const bins = Array.from({ length: binCount }, (_, i) => ({
+        start: min + i * binWidth,
+        end: min + (i + 1) * binWidth,
+        count: 0
+      }));
+      
+      values.forEach(value => {
+        const binIndex = Math.min(Math.floor((value - min) / binWidth), binCount - 1);
+        bins[binIndex].count++;
+      });
+
+      const histogramData = bins.map(bin => [bin.start + binWidth / 2, bin.count]);
+
+      return {
+        title: titleConfig,
+        tooltip: {
+          trigger: 'axis',
+          formatter: (params: any) => {
+            const value = params[0];
+            return `Range: ${(value.data[0] - binWidth/2).toFixed(2)} - ${(value.data[0] + binWidth/2).toFixed(2)}<br/>Count: ${value.data[1]}`;
+          }
+        },
+        xAxis: {
+          type: 'value',
+          ...getAxisLabelConfig(chartConfig.xAxisLabel, false)
+        },
+        yAxis: {
+          type: 'value',
+          ...getAxisLabelConfig(chartConfig.yAxisLabel, true)
+        },
+        series: [{
+          type: 'bar',
+          data: histogramData,
+          itemStyle: { color: colors[0] },
+          barWidth: '90%'
+        }]
+      };
+
+    case 'pie':
+      if (!variableRoles.xAxis) return {};
+      
+      const pieData = data.reduce((acc, item) => {
+        const key = item[variableRoles.xAxis!];
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const pieSeriesData = Object.entries(pieData).map(([name, value], index) => ({
+        name,
+        value,
+        itemStyle: { color: colors[index % colors.length] }
+      }));
+
+      return {
+        title: titleConfig,
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        series: [{
+          name: chartConfig.title || 'Distribution',
+          type: 'pie',
+          radius: '50%',
+          data: pieSeriesData,
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+          }
+        }]
+      };
+
+    case 'boxplot':
+      if (!variableRoles.xAxis) return {};
+      
+      const boxplotValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null).sort((a, b) => a - b);
+      const q1 = boxplotValues[Math.floor(boxplotValues.length * 0.25)];
+      const median = boxplotValues[Math.floor(boxplotValues.length * 0.5)];
+      const q3 = boxplotValues[Math.floor(boxplotValues.length * 0.75)];
+      const min = boxplotValues[0];
+      const max = boxplotValues[boxplotValues.length - 1];
+
+      return {
+        title: titleConfig,
+        tooltip: { trigger: 'item' },
+        xAxis: {
+          type: 'category',
+          data: [variableRoles.xAxis],
+          ...getAxisLabelConfig(chartConfig.xAxisLabel, false)
+        },
+        yAxis: {
+          type: 'value',
+          ...getAxisLabelConfig(chartConfig.yAxisLabel, true)
+        },
+        series: [{
+          type: 'boxplot',
+          data: [[min, q1, median, q3, max]],
+          itemStyle: { color: colors[0] }
+        }]
+      };
+
+    case 'correlation':
+      if (!variableRoles.variables || variableRoles.variables.length < 2) return {};
+      
+      const variables = variableRoles.variables;
+      const correlationMatrix = variables.map((var1, i) => 
+        variables.map((var2, j) => {
+          if (i === j) return 1;
+          const values1 = data.map(d => d[var1]).filter(v => v != null);
+          const values2 = data.map(d => d[var2]).filter(v => v != null);
+          
+          const correlation = calculateCorrelation(values1, values2);
+          return [j, i, correlation];
+        })
+      ).flat();
+
+      return {
+        title: titleConfig,
+        tooltip: {
+          position: 'top',
+          formatter: (params: any) => {
+            return `${variables[params.data[0]]} vs ${variables[params.data[1]]}<br/>Correlation: ${params.data[2].toFixed(3)}`;
+          }
+        },
+        grid: {
+          height: '50%',
+          top: '10%',
+        },
+        xAxis: {
+          type: 'category',
+          data: variables,
+          splitArea: { show: true }
+        },
+        yAxis: {
+          type: 'category',
+          data: variables,
+          splitArea: { show: true }
+        },
+        visualMap: {
+          min: -1,
+          max: 1,
+          calculable: true,
+          orient: 'horizontal',
+          left: 'center',
+          bottom: '15%',
+          inRange: {
+            color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+          }
+        },
+        series: [{
+          type: 'heatmap',
+          data: correlationMatrix,
+          label: {
+            show: true,
+            formatter: (params: any) => params.data[2].toFixed(2)
+          },
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+          }
+        }]
+      };
+
+    default:
+      return {};
   }
-
-  return {
-    ...baseOption,
-    xAxis: {
-      type: 'category',
-      data: variables,
-      splitArea: { show: true }
-    },
-    yAxis: {
-      type: 'category',
-      data: variables,
-      splitArea: { show: true }
-    },
-    visualMap: {
-      min: -1,
-      max: 1,
-      calculable: true,
-      orient: 'horizontal',
-      left: 'center',
-      bottom: '5%',
-      inRange: {
-        color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
-      }
-    },
-    series: [{
-      type: 'heatmap',
-      data: correlationData,
-      label: {
-        show: true,
-        formatter: (params: any) => params.data[2].toFixed(2)
-      }
-    }],
-    tooltip: {
-      position: 'top',
-      formatter: (params: any) => {
-        return `${variables[params.data[0]]} vs ${variables[params.data[1]]}<br/>Correlation: ${params.data[2].toFixed(3)}`;
-      }
-    }
-  };
-};
-
-const generatePieChart = (data: any[], variable: string, config: any, colors: string[], baseOption: any) => {
-  const counts = data.reduce((acc, item) => {
-    const key = item[variable];
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-
-  const pieData = Object.entries(counts).map(([name, value]) => ({ name, value }));
-
-  return {
-    ...baseOption,
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
-    },
-    series: [{
-      name: variable,
-      type: 'pie',
-      radius: '50%',
-      data: pieData,
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowOffsetX: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
-        }
-      },
-      itemStyle: {
-        color: (params: any) => colors[params.dataIndex % colors.length]
-      }
-    }]
-  };
 };
