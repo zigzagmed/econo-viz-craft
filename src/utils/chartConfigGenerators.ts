@@ -26,11 +26,11 @@ export const generateChartConfig = (
 
   const colors = getColorPalette(chartConfig.colorScheme, chartConfig.customColors);
   
-  // Common title configuration with positioning
+  // Common title configuration - always positioned at top
   const titleConfig = {
     text: chartConfig.title || 'Chart',
     left: 'center',
-    top: chartConfig.titlePosition === 'center' ? 'middle' : 20,
+    top: 20,
     textStyle: {
       fontSize: 18,
       fontWeight: 'bold'
@@ -47,6 +47,16 @@ export const generateChartConfig = (
       fontWeight: 'normal'
     }
   });
+
+  const formatTooltipValue = (value: number | string): string => {
+    if (typeof value === 'string') return value;
+    if (value === undefined || value === null) return 'N/A';
+    if (typeof value === 'number') {
+      // Use 0 decimal places for integers, up to 3 for continuous values
+      return Number.isInteger(value) ? value.toString() : value.toFixed(3);
+    }
+    return String(value);
+  };
 
   switch (chartType) {
     case 'scatter':
@@ -104,7 +114,7 @@ const generateScatterConfig = (data: any[], variableRoles: VariableRoles, chartC
       tooltip: {
         trigger: 'item',
         formatter: (params: any) => {
-          return `${variableRoles.xAxis}: ${params.data[0]}<br/>${variableRoles.yAxis}: ${params.data[1]}<br/>${variableRoles.color}: ${params.seriesName}`;
+          return `${variableRoles.xAxis}: ${formatTooltipValue(params.data[0])}<br/>${variableRoles.yAxis}: ${formatTooltipValue(params.data[1])}<br/>${variableRoles.color}: ${params.seriesName}`;
         }
       },
       legend: {
@@ -132,7 +142,7 @@ const generateScatterConfig = (data: any[], variableRoles: VariableRoles, chartC
       tooltip: {
         trigger: 'item',
         formatter: (params: any) => {
-          return `${variableRoles.xAxis}: ${params.data[0]}<br/>${variableRoles.yAxis}: ${params.data[1]}`;
+          return `${variableRoles.xAxis}: ${formatTooltipValue(params.data[0])}<br/>${variableRoles.yAxis}: ${formatTooltipValue(params.data[1])}`;
         }
       },
       xAxis: {
@@ -176,7 +186,16 @@ const generateLineConfig = (data: any[], variableRoles: VariableRoles, chartConf
 
     return {
       title: titleConfig,
-      tooltip: { trigger: 'axis' },
+      tooltip: { 
+        trigger: 'axis',
+        formatter: (params: any) => {
+          let result = `${variableRoles.xAxis}: ${formatTooltipValue(params[0].data[0])}<br/>`;
+          params.forEach((param: any) => {
+            result += `${param.seriesName} (${variableRoles.yAxis}): ${formatTooltipValue(param.data[1])}<br/>`;
+          });
+          return result;
+        }
+      },
       legend: { 
         data: Object.keys(grouped),
         left: 'left',
@@ -198,7 +217,12 @@ const generateLineConfig = (data: any[], variableRoles: VariableRoles, chartConf
     
     return {
       title: titleConfig,
-      tooltip: { trigger: 'axis' },
+      tooltip: { 
+        trigger: 'axis',
+        formatter: (params: any) => {
+          return `${variableRoles.xAxis}: ${formatTooltipValue(params[0].data[0])}<br/>${variableRoles.yAxis}: ${formatTooltipValue(params[0].data[1])}`;
+        }
+      },
       xAxis: {
         type: 'value',
         ...getAxisLabelConfig(chartConfig.xAxisLabel, false)
@@ -263,7 +287,7 @@ const generateBarConfig = (data: any[], variableRoles: VariableRoles, chartConfi
         const category = params[0].name;
         const value = params[0].value;
         const statLabel = variableRoles.statistic?.charAt(0).toUpperCase() + variableRoles.statistic?.slice(1);
-        return `${category}<br/>${statLabel} of ${variableRoles.yAxis}: ${value}`;
+        return `${category}<br/>${statLabel} of ${variableRoles.yAxis}: ${formatTooltipValue(value)}`;
       }
     },
     xAxis: {
@@ -311,7 +335,9 @@ const generateHistogramConfig = (data: any[], variableRoles: VariableRoles, char
       trigger: 'axis',
       formatter: (params: any) => {
         const value = params[0];
-        return `Range: ${(value.data[0] - binWidth/2).toFixed(2)} - ${(value.data[0] + binWidth/2).toFixed(2)}<br/>Count: ${value.data[1]}`;
+        const rangeStart = formatTooltipValue(value.data[0] - binWidth/2);
+        const rangeEnd = formatTooltipValue(value.data[0] + binWidth/2);
+        return `Range: ${rangeStart} - ${rangeEnd}<br/>Count: ${value.data[1]}`;
       }
     },
     xAxis: {
@@ -350,7 +376,9 @@ const generatePieConfig = (data: any[], variableRoles: VariableRoles, chartConfi
     title: titleConfig,
     tooltip: {
       trigger: 'item',
-      formatter: '{a} <br/>{b}: {c} ({d}%)'
+      formatter: (params: any) => {
+        return `${params.name}: ${params.value} (${formatTooltipValue(params.percent)}%)`;
+      }
     },
     series: [{
       name: chartConfig.title || 'Distribution',
@@ -380,7 +408,13 @@ const generateBoxplotConfig = (data: any[], variableRoles: VariableRoles, chartC
 
   return {
     title: titleConfig,
-    tooltip: { trigger: 'item' },
+    tooltip: { 
+      trigger: 'item',
+      formatter: (params: any) => {
+        const [min, q1Val, medianVal, q3Val, max] = params.data;
+        return `Min: ${formatTooltipValue(min)}<br/>Q1: ${formatTooltipValue(q1Val)}<br/>Median: ${formatTooltipValue(medianVal)}<br/>Q3: ${formatTooltipValue(q3Val)}<br/>Max: ${formatTooltipValue(max)}`;
+      }
+    },
     xAxis: {
       type: 'category',
       data: [variableRoles.xAxis],
@@ -418,7 +452,7 @@ const generateCorrelationConfig = (data: any[], variableRoles: VariableRoles, ch
     tooltip: {
       position: 'top',
       formatter: (params: any) => {
-        return `${variables[params.data[0]]} vs ${variables[params.data[1]]}<br/>Correlation: ${params.data[2].toFixed(3)}`;
+        return `${variables[params.data[0]]} vs ${variables[params.data[1]]}<br/>Correlation: ${formatTooltipValue(params.data[2])}`;
       }
     },
     grid: {
@@ -451,7 +485,7 @@ const generateCorrelationConfig = (data: any[], variableRoles: VariableRoles, ch
       data: correlationMatrix,
       label: {
         show: true,
-        formatter: (params: any) => params.data[2].toFixed(2)
+        formatter: (params: any) => formatTooltipValue(params.data[2])
       },
       emphasis: {
         itemStyle: {
