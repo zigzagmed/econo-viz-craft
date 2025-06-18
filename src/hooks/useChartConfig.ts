@@ -10,6 +10,7 @@ interface VariableRoles {
   groupBy?: string;
   bins?: string;
   variables?: string[];
+  histogramBins?: number;
 }
 
 export const useChartConfig = (variableRoles: VariableRoles, chartType: string) => {
@@ -34,6 +35,7 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
     let xAxisLabel = '';
     let yAxisLabel = '';
     let showTrendLine = false;
+    let histogramBins = roles.histogramBins || 10;
 
     const formatVariableName = (variable: string) => 
       variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -104,12 +106,15 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
       xAxisLabel, 
       yAxisLabel,
       showTrendLine,
-      colorVariable: roles.color
+      colorVariable: roles.color,
+      histogramBins
     };
   };
 
   useEffect(() => {
-    if (Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles])) {
+    if (Object.keys(variableRoles).some(role => 
+      role !== 'histogramBins' && variableRoles[role as keyof VariableRoles]
+    )) {
       const newConfig = generateDynamicConfig(variableRoles, chartType);
       setChartConfig(prev => ({
         ...prev,

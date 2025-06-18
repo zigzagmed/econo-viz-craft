@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { TitleCustomization } from './customization/TitleCustomization';
 import { AxisCustomization } from './customization/AxisCustomization';
 import { ColorCustomization } from './customization/ColorCustomization';
-import { HistogramCustomization } from './customization/HistogramCustomization';
 import { DisplayOptionsCustomization } from './customization/DisplayOptionsCustomization';
 
 interface ChartCustomizationProps {
@@ -43,7 +42,6 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
     titlePosition: 'top' as 'top' | 'center',
     xAxisLabelDistance: 30,
     yAxisLabelDistance: 50,
-    histogramBins: 10,
     statsDecimals: 2,
     ...config
   });
@@ -76,7 +74,6 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   };
 
   const showStatsOption = !['pie'].includes(chartType);
-  const showHistogramBins = chartType === 'histogram';
 
   return (
     <div className="space-y-4">
@@ -99,16 +96,6 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
         onXAxisLabelDistanceChange={(distance) => updateLocalConfig('xAxisLabelDistance', distance)}
         onYAxisLabelDistanceChange={(distance) => updateLocalConfig('yAxisLabelDistance', distance)}
       />
-
-      {showHistogramBins && (
-        <>
-          <Separator />
-          <HistogramCustomization
-            histogramBins={localConfig.histogramBins}
-            onHistogramBinsChange={(bins) => updateLocalConfig('histogramBins', bins)}
-          />
-        </>
-      )}
 
       <Separator />
 

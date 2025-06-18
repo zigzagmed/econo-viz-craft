@@ -14,6 +14,7 @@ interface VariableRoles {
   color?: string;
   size?: string;
   series?: string;
+  histogramBins?: number;
 }
 
 export const ChartingTool = () => {
@@ -31,7 +32,9 @@ export const ChartingTool = () => {
     getVariableData
   );
 
-  const canShowChart = chartType && Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles]);
+  const canShowChart = chartType && Object.keys(variableRoles).some(role => 
+    role !== 'histogramBins' && variableRoles[role as keyof VariableRoles]
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
