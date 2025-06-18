@@ -7,7 +7,7 @@ import { ChartCustomization } from './ChartCustomization';
 import { Download, Settings } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { StatisticsTable } from './StatisticsTable';
-import { calculateStatistics } from '../../utils/statisticalUtils';
+import { generateChartStatistics } from '../../utils/chartUtils';
 
 interface VariableRoles {
   xAxis?: string;
@@ -105,7 +105,7 @@ export const ChartDisplay: React.FC<ChartDisplayProps> = ({
             statistics={(() => {
               const allVariables = Object.values(variableRoles).filter(Boolean).flat() as string[];
               const data = getVariableData(selectedDataset, allVariables);
-              return calculateStatistics(data || [], allVariables);
+              return generateChartStatistics(chartType, data || [], variableRoles, chartConfig);
             })()}
             decimals={chartConfig.statsDecimals || 2}
           />

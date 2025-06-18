@@ -22,7 +22,7 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
     showStats: true,
     showTrendLine: false,
     colorVariable: undefined as string | undefined,
-    histogramBins: 20,
+    histogramBins: 10,
     titlePosition: 'top' as 'top' | 'center',
     xAxisLabelDistance: 30,
     yAxisLabelDistance: 50,
