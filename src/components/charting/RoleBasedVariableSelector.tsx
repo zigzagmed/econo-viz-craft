@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Database, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 
 interface Variable {
   name: string;
@@ -170,15 +171,27 @@ export const RoleBasedVariableSelector: React.FC<RoleBasedVariableSelectorProps>
                   {requirement.required && (
                     <Badge variant="destructive" className="text-xs">Required</Badge>
                   )}
-                  <div className="flex gap-1">
-                    {requirement.allowedTypes.map(type => (
-                      <Badge key={type} className={`text-xs ${getTypeColor(type)}`}>
-                        {type}
-                      </Badge>
-                    ))}
-                  </div>
+                  <HoverCard>
+                    <HoverCardTrigger asChild>
+                      <Info className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-help" />
+                    </HoverCardTrigger>
+                    <HoverCardContent className="w-80">
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">{requirement.description}</p>
+                        <div className="space-y-1">
+                          <p className="text-xs text-gray-600">Accepted variable types:</p>
+                          <div className="flex gap-1">
+                            {requirement.allowedTypes.map(type => (
+                              <Badge key={type} className={`text-xs ${getTypeColor(type)}`}>
+                                {type}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
                 </div>
-                <p className="text-xs text-gray-600 mb-2">{requirement.description}</p>
                 
                 <Select
                   value={selectedVariable || 'none'}

@@ -56,17 +56,10 @@ export const ChartingTool = () => {
                 getDatasetInfo={getDatasetInfo}
               />
             )}
-
-            {Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles]) && (
-              <SelectedRolesDisplay
-                variableRoles={variableRoles}
-                chartType={chartType}
-              />
-            )}
           </div>
 
           {/* Right Panel - Chart */}
-          <div className="col-span-8">
+          <div className="col-span-8 space-y-4">
             <ChartDisplay
               canShowChart={canShowChart}
               chartTitle={chartConfig.title}
@@ -82,6 +75,14 @@ export const ChartingTool = () => {
               getVariableData={getVariableData}
               getDatasetInfo={getDatasetInfo}
             />
+
+            {/* Selected Variables Display - Now below the chart */}
+            {Object.keys(variableRoles).some(role => variableRoles[role as keyof VariableRoles]) && (
+              <SelectedRolesDisplay
+                variableRoles={variableRoles}
+                chartType={chartType}
+              />
+            )}
           </div>
         </div>
       </div>
