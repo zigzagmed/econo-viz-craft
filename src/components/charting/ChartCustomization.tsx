@@ -41,7 +41,7 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   const [localConfig, setLocalConfig] = useState({
     titlePosition: 'top' as 'top' | 'center',
     xAxisLabelDistance: 30,
-    yAxisLabelDistance: 50,
+    yAxisLabelDistance: 30,
     statsDecimals: 2,
     ...config
   });

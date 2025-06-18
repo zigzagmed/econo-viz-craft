@@ -37,11 +37,11 @@ export const generateChartConfig = (
     }
   };
 
-  // Common axis label configuration with custom distances (reduced Y-axis distance)
+  // Common axis label configuration with fixed distances of 30
   const getAxisLabelConfig = (label: string, isVertical: boolean) => ({
     name: label,
     nameLocation: 'middle',
-    nameGap: isVertical ? (chartConfig.yAxisLabelDistance || 35) : (chartConfig.xAxisLabelDistance || 30),
+    nameGap: 30,
     nameTextStyle: {
       fontSize: 14,
       fontWeight: 'normal'
@@ -109,7 +109,9 @@ const generateScatterConfig = (data: any[], variableRoles: VariableRoles, chartC
       },
       legend: {
         data: Object.keys(groupedData),
-        top: 40
+        left: 'left',
+        bottom: 10,
+        orient: 'horizontal'
       },
       xAxis: {
         type: 'value',
@@ -175,7 +177,12 @@ const generateLineConfig = (data: any[], variableRoles: VariableRoles, chartConf
     return {
       title: titleConfig,
       tooltip: { trigger: 'axis' },
-      legend: { data: Object.keys(grouped) },
+      legend: { 
+        data: Object.keys(grouped),
+        left: 'left',
+        bottom: 10,
+        orient: 'horizontal'
+      },
       xAxis: {
         type: 'value',
         ...getAxisLabelConfig(chartConfig.xAxisLabel, false)
