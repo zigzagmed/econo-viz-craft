@@ -1,5 +1,6 @@
 
 import { getColorPalette } from '../colorUtils';
+import { calculateRegression } from '../statisticalUtils';
 
 interface VariableRoles {
   xAxis?: string;
@@ -24,6 +25,33 @@ export const generateScatterConfig = (
 ) => {
   if (!variableRoles.xAxis || !variableRoles.yAxis) return {};
   
+  const isRegression = chartConfig.showTrendLine || false;
+  
+  // Helper function to generate trend line data
+  const generateTrendLine = (xValues: number[], yValues: number[], color: string) => {
+    const { slope, intercept } = calculateRegression(xValues, yValues);
+    const minX = Math.min(...xValues);
+    const maxX = Math.max(...xValues);
+    
+    return {
+      name: 'Trend Line',
+      type: 'line',
+      data: [
+        [minX, slope * minX + intercept],
+        [maxX, slope * maxX + intercept]
+      ],
+      itemStyle: {
+        color: color
+      },
+      lineStyle: {
+        type: 'dashed',
+        width: 2
+      },
+      symbol: 'none',
+      silent: true
+    };
+  };
+  
   // If color variable is specified, group data by color variable
   if (variableRoles.color) {
     const groupedData = data.reduce((acc, item) => {
@@ -44,16 +72,34 @@ export const generateScatterConfig = (
       }
     }));
 
+    // Add trend lines for regression plots when color grouping is used
+    if (isRegression) {
+      Object.keys(groupedData).forEach((group, index) => {
+        const groupData = groupedData[group];
+        const xValues = groupData.map(point => point[0]);
+        const yValues = groupData.map(point => point[1]);
+        
+        if (xValues.length > 1) {
+          const trendLine = generateTrendLine(xValues, yValues, colors[index % colors.length]);
+          trendLine.name = `${group} Trend`;
+          series.push(trendLine);
+        }
+      });
+    }
+
     return {
       title: titleConfig,
       tooltip: {
         trigger: 'item',
         formatter: (params: any) => {
+          if (params.seriesName.includes('Trend')) {
+            return `${params.seriesName}<br/>${variableRoles.xAxis}: ${formatTooltipValue(params.data[0])}<br/>${variableRoles.yAxis}: ${formatTooltipValue(params.data[1])}`;
+          }
           return `${variableRoles.xAxis}: ${formatTooltipValue(params.data[0])}<br/>${variableRoles.yAxis}: ${formatTooltipValue(params.data[1])}<br/>${variableRoles.color}: ${params.seriesName}`;
         }
       },
       legend: {
-        data: Object.keys(groupedData),
+        data: series.map(s => s.name),
         left: 'left',
         bottom: 10,
         orient: 'horizontal'
@@ -71,12 +117,30 @@ export const generateScatterConfig = (
   } else {
     // No color variable, use single series
     const scatterData = data.map(d => [d[variableRoles.xAxis!], d[variableRoles.yAxis!]]);
+    const series = [{
+      type: 'scatter',
+      data: scatterData,
+      itemStyle: {
+        color: colors[0]
+      }
+    }];
+
+    // Add trend line for regression plots
+    if (isRegression && scatterData.length > 1) {
+      const xValues = scatterData.map(point => point[0]);
+      const yValues = scatterData.map(point => point[1]);
+      const trendLine = generateTrendLine(xValues, yValues, colors[0]);
+      series.push(trendLine);
+    }
     
     return {
       title: titleConfig,
       tooltip: {
         trigger: 'item',
         formatter: (params: any) => {
+          if (params.seriesName === 'Trend Line') {
+            return `Trend Line<br/>${variableRoles.xAxis}: ${formatTooltipValue(params.data[0])}<br/>${variableRoles.yAxis}: ${formatTooltipValue(params.data[1])}`;
+          }
           return `${variableRoles.xAxis}: ${formatTooltipValue(params.data[0])}<br/>${variableRoles.yAxis}: ${formatTooltipValue(params.data[1])}`;
         }
       },
@@ -88,13 +152,13 @@ export const generateScatterConfig = (
         type: 'value',
         ...getAxisLabelConfig(chartConfig.yAxisLabel, true)
       },
-      series: [{
-        type: 'scatter',
-        data: scatterData,
-        itemStyle: {
-          color: colors[0]
-        }
-      }]
+      series,
+      legend: isRegression && scatterData.length > 1 ? {
+        data: ['Series', 'Trend Line'],
+        left: 'left',
+        bottom: 10,
+        orient: 'horizontal'
+      } : undefined
     };
   }
 };
