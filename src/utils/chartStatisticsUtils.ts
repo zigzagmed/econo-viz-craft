@@ -49,7 +49,7 @@ export const generateChartStatistics = (
         Object.entries(grouped).forEach(([category, values]) => {
           if (isArray(values) && values.length > 0 && values.every(isNumber)) {
             const numericValues = values as number[];
-            let result;
+            let result: number;
             switch (variableRoles.statistic) {
               case 'sum':
                 result = numericValues.reduce((sum: number, val: number) => sum + val, 0);
@@ -140,8 +140,10 @@ export const generateChartStatistics = (
         }, 0);
         
         Object.entries(pieData).forEach(([category, count]) => {
-          const percentage = (count / total) * 100;
-          stats[category] = { value: `${count} (${percentage.toFixed(1)}%)` };
+          const numericCount = count as number;
+          const numericTotal = total as number;
+          const percentage = (numericCount / numericTotal) * 100;
+          stats[category] = { value: `${numericCount} (${percentage.toFixed(1)}%)` };
         });
       }
       break;
