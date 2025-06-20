@@ -152,8 +152,12 @@ export const generateChartStatistics = (
           stats[`${category}`] = { value: calculatedValue };
         });
 
-        // Calculate total statistic
-        const allValues = Object.values(groupedData).flat();
+        // Calculate total statistic - fix type safety here
+        const allValues: number[] = [];
+        Object.values(groupedData).forEach(valueArray => {
+          allValues.push(...valueArray);
+        });
+        
         let totalValue: number;
         switch (variableRoles.statistic) {
           case 'sum':
