@@ -23,6 +23,13 @@ export const generateChartStatistics = (
 
   if (!data || data.length === 0) return stats;
 
+  // Helper function to safely convert to number
+  const toNumber = (value: any): number | null => {
+    if (value == null || value === '' || value === undefined) return null;
+    const num = Number(value);
+    return isNaN(num) ? null : num;
+  };
+
   // Helper function to calculate R-squared
   const calculateRSquared = (xValues: number[], yValues: number[]) => {
     const { slope, intercept } = calculateRegression(xValues, yValues);
@@ -44,8 +51,8 @@ export const generateChartStatistics = (
     case 'scatter':
     case 'regression':
       if (variableRoles.xAxis && variableRoles.yAxis) {
-        const xValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
-        const yValues = data.map(d => d[variableRoles.yAxis!]).filter(v => v != null);
+        const xValues = data.map(d => toNumber(d[variableRoles.xAxis!])).filter((v): v is number => v !== null);
+        const yValues = data.map(d => toNumber(d[variableRoles.yAxis!])).filter((v): v is number => v !== null);
         
         if (xValues.length > 1 && yValues.length > 1) {
           const correlation = calculateCorrelation(xValues, yValues);
@@ -59,13 +66,15 @@ export const generateChartStatistics = (
             // If color variable is used, calculate stats for each group
             if (variableRoles.color) {
               const groupedData = data.reduce((acc, item) => {
-                const colorValue = item[variableRoles.color!];
+                const colorValue = String(item[variableRoles.color!]);
                 if (!acc[colorValue]) {
                   acc[colorValue] = { x: [], y: [] };
                 }
-                if (item[variableRoles.xAxis!] != null && item[variableRoles.yAxis!] != null) {
-                  acc[colorValue].x.push(item[variableRoles.xAxis!]);
-                  acc[colorValue].y.push(item[variableRoles.yAxis!]);
+                const xVal = toNumber(item[variableRoles.xAxis!]);
+                const yVal = toNumber(item[variableRoles.yAxis!]);
+                if (xVal !== null && yVal !== null) {
+                  acc[colorValue].x.push(xVal);
+                  acc[colorValue].y.push(yVal);
                 }
                 return acc;
               }, {} as Record<string, { x: number[], y: number[] }>);
@@ -99,13 +108,13 @@ export const generateChartStatistics = (
       if (variableRoles.xAxis && variableRoles.yAxis && variableRoles.statistic) {
         // Mirror the exact logic from barGenerator
         const groupedData = data.reduce((acc, item) => {
-          const xValue = item[variableRoles.xAxis!];
-          const yValue = item[variableRoles.yAxis!];
+          const xValue = String(item[variableRoles.xAxis!]);
+          const yValue = toNumber(item[variableRoles.yAxis!]);
           
           if (!acc[xValue]) {
             acc[xValue] = [];
           }
-          if (yValue !== null && yValue !== undefined) {
+          if (yValue !== null) {
             acc[xValue].push(yValue);
           }
           return acc;
@@ -159,7 +168,7 @@ export const generateChartStatistics = (
       if (variableRoles.xAxis) {
         // Mirror the exact logic from pieGenerator
         const pieData = data.reduce((acc, item) => {
-          const key = item[variableRoles.xAxis!];
+          const key = String(item[variableRoles.xAxis!]);
           acc[key] = (acc[key] || 0) + 1;
           return acc;
         }, {} as Record<string, number>);
@@ -179,7 +188,7 @@ export const generateChartStatistics = (
     case 'histogram':
       if (variableRoles.xAxis) {
         // Mirror the exact logic from histogramGenerator
-        const histValues = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
+        const histValues = data.map(d => toNumber(d[variableRoles.xAxis!])).filter((v): v is number => v !== null);
         const histMin = Math.min(...histValues);
         const histMax = Math.max(...histValues);
         const binCount = chartConfig.histogramBins || 10;
@@ -211,13 +220,13 @@ export const generateChartStatistics = (
         if (variableRoles.groupBy) {
           // Grouped box plot statistics
           const groupedData = data.reduce((acc, item) => {
-            const groupValue = item[variableRoles.groupBy!];
-            const dataValue = item[variableRoles.xAxis!];
+            const groupValue = String(item[variableRoles.groupBy!]);
+            const dataValue = toNumber(item[variableRoles.xAxis!]);
             
             if (!acc[groupValue]) {
               acc[groupValue] = [];
             }
-            if (dataValue != null) {
+            if (dataValue !== null) {
               acc[groupValue].push(dataValue);
             }
             return acc;
@@ -243,7 +252,7 @@ export const generateChartStatistics = (
           });
         } else {
           // Single box plot statistics
-          const values = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
+          const values = data.map(d => toNumber(d[variableRoles.xAxis!])).filter((v): v is number => v !== null);
           if (values.length > 0) {
             const sorted = [...values].sort((a, b) => a - b);
             const q1Index = Math.floor(sorted.length * 0.25);
@@ -267,7 +276,7 @@ export const generateChartStatistics = (
         if (variableRoles.groupBy) {
           // Grouped line chart statistics
           const grouped = data.reduce((acc, item) => {
-            const groupValue = item[variableRoles.groupBy!];
+            const groupValue = String(item[variableRoles.groupBy!]);
             if (!acc[groupValue]) acc[groupValue] = [];
             acc[groupValue].push(item);
             return acc;
@@ -275,7 +284,7 @@ export const generateChartStatistics = (
 
           Object.keys(grouped).forEach(group => {
             const groupData = grouped[group];
-            const yValues = groupData.map(d => d[variableRoles.yAxis!]).filter(v => v != null);
+            const yValues = groupData.map(d => toNumber(d[variableRoles.yAxis!])).filter((v): v is number => v !== null);
             
             if (yValues.length > 0) {
               const sum = yValues.reduce((acc, val) => acc + val, 0);
@@ -291,7 +300,7 @@ export const generateChartStatistics = (
           });
         } else {
           // Single line chart statistics
-          const yValues = data.map(d => d[variableRoles.yAxis!]).filter(v => v != null);
+          const yValues = data.map(d => toNumber(d[variableRoles.yAxis!])).filter((v): v is number => v !== null);
           if (yValues.length > 0) {
             const sum = yValues.reduce((acc, val) => acc + val, 0);
             const mean = sum / yValues.length;
@@ -318,8 +327,8 @@ export const generateChartStatistics = (
             const var1 = variables[i];
             const var2 = variables[j];
             
-            const values1 = data.map(d => d[var1]).filter(v => v != null);
-            const values2 = data.map(d => d[var2]).filter(v => v != null);
+            const values1 = data.map(d => toNumber(d[var1])).filter((v): v is number => v !== null);
+            const values2 = data.map(d => toNumber(d[var2])).filter((v): v is number => v !== null);
             
             if (values1.length > 1 && values2.length > 1) {
               const correlation = calculateCorrelation(values1, values2);
@@ -336,7 +345,7 @@ export const generateChartStatistics = (
     default:
       // Basic statistics for unknown chart types
       if (variableRoles.xAxis) {
-        const values = data.map(d => d[variableRoles.xAxis!]).filter(v => v != null);
+        const values = data.map(d => toNumber(d[variableRoles.xAxis!])).filter((v): v is number => v !== null);
         if (values.length > 0) {
           stats['Sample Size (n)'] = { value: values.length };
         }
