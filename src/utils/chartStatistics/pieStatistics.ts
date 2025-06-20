@@ -24,7 +24,7 @@ export const generatePieStatistics = (
     return acc;
   }, {} as Record<string, number>);
 
-  const total = Object.values(pieData).reduce((sum, count) => sum + count, 0);
+  const total = Object.values(pieData).reduce((sum: number, count: number) => sum + count, 0);
   
   Object.entries(pieData).forEach(([category, count]) => {
     const percentage = (count / total) * 100;

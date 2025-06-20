@@ -66,7 +66,7 @@ export const generateBarStatistics = (
 
   // Calculate total statistic with proper type safety
   const allValues: number[] = [];
-  Object.values(groupedData).forEach(valueArray => {
+  Object.values(groupedData).forEach((valueArray: number[]) => {
     allValues.push(...valueArray);
   });
   

@@ -29,12 +29,6 @@ export const getChartRoleRequirements = (chartType: string): ChartRoleRequiremen
       label: 'Color Variable',
       description: 'Variable to color-code data points',
       allowedTypes: ['categorical', 'binary'] as ('continuous' | 'categorical' | 'binary')[]
-    },
-    size: {
-      required: false,
-      label: 'Size Variable',
-      description: 'Variable to size data points',
-      allowedTypes: ['continuous'] as ('continuous' | 'categorical' | 'binary')[]
     }
   };
 
@@ -44,8 +38,7 @@ export const getChartRoleRequirements = (chartType: string): ChartRoleRequiremen
       return {
         xAxis: { ...commonRoles.xAxis, allowedTypes: ['continuous'] as ('continuous' | 'categorical' | 'binary')[] },
         yAxis: commonRoles.yAxis,
-        color: commonRoles.color,
-        size: commonRoles.size
+        color: commonRoles.color
       };
 
     case 'line':
