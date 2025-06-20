@@ -152,15 +152,31 @@ export const generateChartStatistics = (
           stats[`${category}`] = { value: calculatedValue };
         });
 
+        // Calculate total statistic
+        const allValues = Object.values(groupedData).flat();
+        let totalValue: number;
+        switch (variableRoles.statistic) {
+          case 'sum':
+            totalValue = allValues.reduce((sum, val) => sum + val, 0);
+            break;
+          case 'average':
+            totalValue = allValues.length > 0 ? allValues.reduce((sum, val) => sum + val, 0) / allValues.length : 0;
+            break;
+          case 'count':
+            totalValue = allValues.length;
+            break;
+          case 'min':
+            totalValue = allValues.length > 0 ? Math.min(...allValues) : 0;
+            break;
+          case 'max':
+            totalValue = allValues.length > 0 ? Math.max(...allValues) : 0;
+            break;
+          default:
+            totalValue = allValues.length;
+        }
+
         const statLabel = variableRoles.statistic?.charAt(0).toUpperCase() + variableRoles.statistic?.slice(1);
-        const totalValues = Object.values(groupedData).flat();
-        stats[`Total ${statLabel}`] = { 
-          value: variableRoles.statistic === 'sum' 
-            ? totalValues.reduce((sum, val) => sum + val, 0)
-            : variableRoles.statistic === 'average'
-            ? totalValues.reduce((sum, val) => sum + val, 0) / totalValues.length
-            : totalValues.length
-        };
+        stats[`Total ${statLabel}`] = { value: totalValue };
       }
       break;
 
