@@ -27,12 +27,14 @@ export const generatePieStatistics = (
   const total = Object.values(pieData).reduce((sum: number, count: number) => sum + count, 0);
   
   Object.entries(pieData).forEach(([category, count]) => {
-    const percentage = (count / total) * 100;
-    stats[`${category} (Count)`] = { value: count };
-    stats[`${category} (%)`] = { value: percentage };
+    const numericCount = Number(count);
+    const numericTotal = Number(total);
+    const percentage = numericTotal > 0 ? (numericCount / numericTotal) * 100 : 0;
+    stats[`${category} (Count)`] = { value: numericCount };
+    stats[`${category} (%)`] = { value: Number(percentage.toFixed(2)) };
   });
   
-  stats['Total Records'] = { value: total };
+  stats['Total Records'] = { value: Number(total) };
 
   return stats;
 };
