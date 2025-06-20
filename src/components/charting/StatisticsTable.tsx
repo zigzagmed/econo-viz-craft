@@ -29,53 +29,58 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
     return null;
   }
 
-  // Check if we have grouped statistics (like "Category - Statistic" format)
-  const hasGroupedStats = statEntries.some(([key]) => 
-    key.includes(' (Count)') || key.includes(' (%)') || key.includes(' (Sum)') || 
-    key.includes(' (Average)') || key.includes(' (Min)') || key.includes(' (Max)')
-  );
-
-  // For bar charts and other grouped statistics, try to pivot
-  const groupPattern = /^(.+?)\s*$/;
-  const statPattern = /\(([^)]+)\)$/;
+  // Check for grouped statistics patterns like "Group (Statistic)" or "Group - Statistic"
+  const groupedData: Record<string, Record<string, number | string>> = {};
+  const totalStats: Array<[string, { value: number | string }]> = [];
   
-  if (hasGroupedStats) {
-    // Extract groups and statistics
-    const groupedData: Record<string, Record<string, number | string>> = {};
-    const nonGroupedStats: Array<[string, { value: number | string }]> = [];
+  statEntries.forEach(([key, data]) => {
+    // Pattern 1: "Group (Statistic)" format
+    const parenthesesMatch = key.match(/^(.+?)\s*\(([^)]+)\)$/);
+    // Pattern 2: "Group - Statistic" format  
+    const dashMatch = key.match(/^(.+?)\s*-\s*(.+)$/);
     
-    statEntries.forEach(([key, data]) => {
-      if (key.includes('(') && key.includes(')')) {
-        const match = key.match(/^(.+?)\s*\(([^)]+)\)$/);
-        if (match) {
-          const [, group, stat] = match;
-          if (!groupedData[group]) {
-            groupedData[group] = {};
-          }
-          groupedData[group][stat] = data.value;
-        }
-      } else if (!key.startsWith('Total')) {
-        // This might be a simple group statistic without parentheses
-        groupedData[key] = { Value: data.value };
-      } else {
-        nonGroupedStats.push([key, data]);
+    if (parenthesesMatch) {
+      const [, group, stat] = parenthesesMatch;
+      if (!groupedData[group]) {
+        groupedData[group] = {};
       }
-    });
+      groupedData[group][stat] = data.value;
+    } else if (dashMatch && !key.toLowerCase().includes('total')) {
+      const [, group, stat] = dashMatch;
+      if (!groupedData[group]) {
+        groupedData[group] = {};
+      }
+      groupedData[group][stat] = data.value;
+    } else if (key.toLowerCase().includes('total') || key.toLowerCase().includes('sample size') || 
+               key.toLowerCase().includes('correlation') || key.toLowerCase().includes('slope') ||
+               key.toLowerCase().includes('intercept') || key.toLowerCase().includes('r²')) {
+      // These are summary/total statistics
+      totalStats.push([key, data]);
+    } else {
+      // Simple ungrouped statistic - treat as its own group
+      groupedData[key] = { 'Value': data.value };
+    }
+  });
 
-    const groups = Object.keys(groupedData);
+  const groups = Object.keys(groupedData);
+  
+  // If we have grouped data, create a pivoted table
+  if (groups.length > 0) {
+    // Get all unique statistics across all groups
     const allStats = new Set<string>();
     groups.forEach(group => {
       Object.keys(groupedData[group]).forEach(stat => allStats.add(stat));
     });
     const statsArray = Array.from(allStats).sort();
 
-    if (groups.length > 0 && statsArray.length > 0) {
-      return (
-        <Card className="mt-4 w-full">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Chart Statistics</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
+    return (
+      <Card className="mt-4 w-full">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Chart Statistics</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {/* Main grouped statistics table */}
+          {statsArray.length > 0 && (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -101,26 +106,27 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
                 ))}
               </TableBody>
             </Table>
-            
-            {/* Show non-grouped statistics below */}
-            {nonGroupedStats.length > 0 && (
-              <div className="mt-4 pt-4 border-t">
-                <Table>
-                  <TableBody>
-                    {nonGroupedStats.map(([statName, statData]) => (
-                      <TableRow key={statName}>
-                        <TableCell className="font-medium">{statName}</TableCell>
-                        <TableCell className="text-right">{formatValue(statData.value)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      );
-    }
+          )}
+          
+          {/* Summary statistics below if any */}
+          {totalStats.length > 0 && (
+            <div className="mt-4 pt-4 border-t">
+              <h4 className="text-sm font-medium mb-2">Summary Statistics</h4>
+              <Table>
+                <TableBody>
+                  {totalStats.map(([statName, statData]) => (
+                    <TableRow key={statName}>
+                      <TableCell className="font-medium">{statName}</TableCell>
+                      <TableCell className="text-right">{formatValue(statData.value)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
   // Fallback to simple 2-column layout for non-grouped statistics
