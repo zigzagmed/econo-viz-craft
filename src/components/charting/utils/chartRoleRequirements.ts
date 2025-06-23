@@ -34,7 +34,6 @@ export const getChartRoleRequirements = (chartType: string): ChartRoleRequiremen
 
   switch (chartType) {
     case 'scatter':
-    case 'regression':
       return {
         xAxis: { ...commonRoles.xAxis, allowedTypes: ['continuous'] as ('continuous' | 'categorical' | 'binary')[] },
         yAxis: commonRoles.yAxis,

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 interface VariableRoles {
@@ -46,12 +47,6 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
           title = `${xVar} vs ${yVar}`;
           xAxisLabel = xVar;
           yAxisLabel = yVar;
-          break;
-        case 'regression':
-          title = `${xVar} vs ${yVar}`;
-          xAxisLabel = xVar;
-          yAxisLabel = yVar;
-          showTrendLine = true;
           break;
         case 'bar':
         case 'line':

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartTypeSelector } from './ChartTypeSelector';
-import { BarChart, ChevronDown, ChevronUp, LineChart, PieChart, ScatterChart, TrendingUp } from 'lucide-react';
+import { BarChart, ChevronDown, ChevronUp, LineChart, PieChart, ScatterChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ChartTypeSelectionCardProps {
@@ -28,10 +28,9 @@ export const ChartTypeSelectionCard: React.FC<ChartTypeSelectionCardProps> = ({
       bar: { name: 'Bar Chart', icon: BarChart, description: 'Compare categories or values' },
       line: { name: 'Line Chart', icon: LineChart, description: 'Show trends over time' },
       pie: { name: 'Pie Chart', icon: PieChart, description: 'Show proportions' },
-      scatter: { name: 'Scatter Plot', icon: ScatterChart, description: 'Show relationships' },
+      scatter: { name: 'Scatter Plot', icon: ScatterChart, description: 'Show relationships with optional trend line' },
       histogram: { name: 'Histogram', icon: BarChart, description: 'Show distribution' },
       boxplot: { name: 'Box Plot', icon: BarChart, description: 'Show quartiles and outliers' },
-      regression: { name: 'Regression Plot', icon: TrendingUp, description: 'Relationship with trend line' },
       correlation: { name: 'Correlation Matrix', icon: BarChart, description: 'Variable correlations' },
     };
     return chartTypes[type] || { name: type, icon: BarChart, description: '' };

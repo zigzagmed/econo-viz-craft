@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { TitleCustomization } from './customization/TitleCustomization';
 import { AxisCustomization } from './customization/AxisCustomization';
 import { ColorCustomization } from './customization/ColorCustomization';
@@ -74,6 +76,7 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
   };
 
   const showStatsOption = !['pie'].includes(chartType);
+  const showTrendLineOption = chartType === 'scatter';
 
   return (
     <div className="space-y-4">
@@ -115,6 +118,23 @@ export const ChartCustomization: React.FC<ChartCustomizationProps> = ({
         onStatsDecimalsChange={(decimals) => updateLocalConfig('statsDecimals', decimals)}
         showStatsOption={showStatsOption}
       />
+
+      {showTrendLineOption && (
+        <>
+          <Separator />
+          <div className="space-y-3">
+            <h4 className="text-sm font-medium">Trend Line</h4>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="trend-line" className="text-sm">Show trend line</Label>
+              <Switch
+                id="trend-line"
+                checked={localConfig.showTrendLine}
+                onCheckedChange={(checked) => updateLocalConfig('showTrendLine', checked)}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <Separator />
       <div className="flex justify-end pt-2">

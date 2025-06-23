@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BarChart, LineChart, PieChart, ScatterChart, TrendingUp } from 'lucide-react';
+import { BarChart, LineChart, PieChart, ScatterChart } from 'lucide-react';
 
 interface SmartChartTypeSelectorProps {
   selectedType: string;
@@ -93,13 +93,6 @@ export const SmartChartTypeSelector: React.FC<SmartChartTypeSelectorProps> = ({
           description: `See relationship between variables`,
           recommended: true
         });
-        charts.push({
-          id: 'regression',
-          name: 'Regression Plot',
-          icon: TrendingUp,
-          description: `Relationship with trend line`,
-          recommended: true
-        });
       }
     }
 
@@ -130,11 +123,10 @@ export const SmartChartTypeSelector: React.FC<SmartChartTypeSelectorProps> = ({
     const allCharts = [
       { id: 'bar', name: 'Bar Chart', icon: BarChart, description: 'Compare categories or values' },
       { id: 'line', name: 'Line Chart', icon: LineChart, description: 'Show trends over time' },
-      { id: 'scatter', name: 'Scatter Plot', icon: ScatterChart, description: 'Show relationships' },
+      { id: 'scatter', name: 'Scatter Plot', icon: ScatterChart, description: 'Show relationships with optional trend line' },
       { id: 'pie', name: 'Pie Chart', icon: PieChart, description: 'Show proportions' },
       { id: 'histogram', name: 'Histogram', icon: BarChart, description: 'Show distribution' },
       { id: 'boxplot', name: 'Box Plot', icon: BarChart, description: 'Show quartiles' },
-      { id: 'regression', name: 'Regression Plot', icon: TrendingUp, description: 'Relationship with trend' },
       { id: 'correlation', name: 'Correlation Matrix', icon: BarChart, description: 'Variable correlations' }
     ];
 

@@ -36,7 +36,6 @@ export const generateChartConfig = (
 
   switch (chartType) {
     case 'scatter':
-    case 'regression':
       return generateScatterConfig(data, variableRoles, chartConfig, titleConfig, getAxisLabelConfig, colors, formatTooltipValue);
 
     case 'line':

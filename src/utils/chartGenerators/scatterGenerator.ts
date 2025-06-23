@@ -24,7 +24,7 @@ export const generateScatterConfig = (
 ) => {
   if (!variableRoles.xAxis || !variableRoles.yAxis) return {};
   
-  const isRegression = chartConfig.showTrendLine || false;
+  const showTrendLine = chartConfig.showTrendLine || false;
   
   // Helper function to generate trend line data
   const generateTrendLine = (xValues: number[], yValues: number[], color: string) => {
@@ -71,8 +71,8 @@ export const generateScatterConfig = (
       }
     }));
 
-    // Add trend lines for regression plots when color grouping is used
-    if (isRegression) {
+    // Add trend lines when enabled and color grouping is used
+    if (showTrendLine) {
       Object.keys(groupedData).forEach((group, index) => {
         const groupData = groupedData[group];
         const xValues = groupData.map(point => point[0]);
@@ -117,6 +117,7 @@ export const generateScatterConfig = (
     // No color variable, use single series
     const scatterData = data.map(d => [d[variableRoles.xAxis!], d[variableRoles.yAxis!]]);
     const series = [{
+      name: 'Data Points',
       type: 'scatter',
       data: scatterData,
       itemStyle: {
@@ -124,8 +125,8 @@ export const generateScatterConfig = (
       }
     }];
 
-    // Add trend line for regression plots
-    if (isRegression && scatterData.length > 1) {
+    // Add trend line when enabled
+    if (showTrendLine && scatterData.length > 1) {
       const xValues = scatterData.map(point => point[0]);
       const yValues = scatterData.map(point => point[1]);
       const trendLine = generateTrendLine(xValues, yValues, colors[0]);
@@ -152,8 +153,8 @@ export const generateScatterConfig = (
         ...getAxisLabelConfig(chartConfig.yAxisLabel, true)
       },
       series,
-      legend: isRegression && scatterData.length > 1 ? {
-        data: ['Series', 'Trend Line'],
+      legend: showTrendLine && scatterData.length > 1 ? {
+        data: ['Data Points', 'Trend Line'],
         left: 'left',
         bottom: 10,
         orient: 'horizontal'
