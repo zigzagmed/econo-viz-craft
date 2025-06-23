@@ -99,7 +99,7 @@ export const generateScatterConfig = (
       },
       legend: {
         data: series.map(s => s.name),
-        left: 'left',
+        left: 70,
         bottom: 10,
         orient: 'horizontal'
       },
@@ -155,7 +155,7 @@ export const generateScatterConfig = (
       series,
       legend: showTrendLine && scatterData.length > 1 ? {
         data: ['Data Points', 'Trend Line'],
-        left: 'left',
+        left: 70,
         bottom: 10,
         orient: 'horizontal'
       } : undefined
