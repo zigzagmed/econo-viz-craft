@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import * as echarts from 'echarts';
 import { calculateStatistics } from '../utils/statisticalUtils';
@@ -8,6 +9,7 @@ interface VariableRoles {
   yAxis?: string;
   color?: string;
   series?: string;
+  variables?: string[];
 }
 
 export const useECharts = (
@@ -95,11 +97,12 @@ export const useECharts = (
     
     try {
       // Get all variables from roles (excluding undefined values)
-      const allVariables = Object.values(variableRoles).filter(Boolean) as string[];
+      const allVariables = Object.values(variableRoles).filter(Boolean).flat() as string[];
       
       console.log('Fetching data for variables:', allVariables);
       const data = getVariableData(selectedDataset, allVariables);
       console.log('Retrieved data sample:', data?.slice(0, 3));
+      console.log('Data structure check - first row keys:', data?.[0] ? Object.keys(data[0]) : 'no data');
       
       if (!data || data.length === 0) {
         console.log('No data available for chart');

@@ -24,7 +24,7 @@ export const generateCorrelationConfig = (
   
   const variables = variableRoles.variables;
   
-  console.log('Correlation matrix data:', data.slice(0, 3));
+  console.log('Correlation matrix data structure:', data[0]);
   console.log('Variables for correlation:', variables);
   
   // Create correlation matrix data
@@ -34,35 +34,41 @@ export const generateCorrelationConfig = (
       if (i === j) {
         correlationMatrix.push([j, i, 1.0]);
       } else {
-        // Get values for both variables, ensuring we have the same data points
-        const pairedData = data
-          .map(d => {
-            const xVal = d[variables[i]];
-            const yVal = d[variables[j]];
-            return { x: xVal, y: yVal };
-          })
-          .filter(pair => {
-            const xNum = Number(pair.x);
-            const yNum = Number(pair.y);
-            return pair.x != null && 
-                   pair.y != null && 
-                   !isNaN(xNum) && 
-                   !isNaN(yNum) &&
-                   isFinite(xNum) &&
-                   isFinite(yNum);
-          });
+        // Extract values for both variables from the data structure
+        // The data comes as a flattened structure, so we need to extract individual variables
+        const values1: number[] = [];
+        const values2: number[] = [];
         
-        console.log(`Paired data for ${variables[i]} vs ${variables[j]}:`, pairedData.length, 'points');
+        // Check if data has individual variable properties or flattened structure
+        data.forEach(row => {
+          let val1, val2;
+          
+          // Try direct property access first
+          if (row[variables[i]] !== undefined) {
+            val1 = row[variables[i]];
+          }
+          
+          if (row[variables[j]] !== undefined) {
+            val2 = row[variables[j]];
+          }
+          
+          // Convert to numbers and validate
+          const num1 = Number(val1);
+          const num2 = Number(val2);
+          
+          if (!isNaN(num1) && !isNaN(num2) && isFinite(num1) && isFinite(num2)) {
+            values1.push(num1);
+            values2.push(num2);
+          }
+        });
         
-        if (pairedData.length < 2) {
+        console.log(`Values for ${variables[i]}:`, values1.slice(0, 5), `(${values1.length} total)`);
+        console.log(`Values for ${variables[j]}:`, values2.slice(0, 5), `(${values2.length} total)`);
+        
+        if (values1.length < 2 || values2.length < 2) {
+          console.log(`Insufficient data for ${variables[i]} vs ${variables[j]}`);
           correlationMatrix.push([j, i, 0.0]);
         } else {
-          const values1 = pairedData.map(pair => Number(pair.x));
-          const values2 = pairedData.map(pair => Number(pair.y));
-          
-          console.log(`Values1 sample:`, values1.slice(0, 5));
-          console.log(`Values2 sample:`, values2.slice(0, 5));
-          
           const correlation = calculateCorrelation(values1, values2);
           console.log(`Calculated correlation for ${variables[i]} vs ${variables[j]}:`, correlation);
           
