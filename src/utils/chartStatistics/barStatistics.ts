@@ -36,7 +36,7 @@ export const generateBarStatistics = (
   categories.forEach(category => {
     const values = groupedData[category];
     if (values.length === 0) {
-      stats[`${category} (${variableRoles.statistic})`] = { value: 0 };
+      stats[category] = { value: 0 };
       return;
     }
     
@@ -61,7 +61,7 @@ export const generateBarStatistics = (
         calculatedValue = values.length;
     }
     
-    stats[`${category} (${variableRoles.statistic})`] = { value: calculatedValue };
+    stats[category] = { value: calculatedValue };
   });
 
   // Calculate total statistic with proper type safety
