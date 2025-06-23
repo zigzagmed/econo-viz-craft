@@ -80,6 +80,30 @@ export const generateCorrelationConfig = (
 
   console.log('Final correlation matrix:', correlationMatrix);
 
+  // Get color scheme based on chart configuration
+  const getCorrelationColors = (colorScheme: string, customColors?: string[]) => {
+    switch (colorScheme) {
+      case 'colorblind':
+        return ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026'];
+      case 'grayscale':
+        return ['#000000', '#333333', '#666666', '#999999', '#cccccc', '#ffffff'];
+      case 'vibrant':
+        return ['#440154', '#31688e', '#35b779', '#fde725'];
+      case 'custom':
+        if (customColors && customColors.length >= 2) {
+          // Create a gradient between the custom colors
+          return customColors.length === 2 
+            ? [customColors[0], '#ffffff', customColors[1]]
+            : customColors;
+        }
+        return ['#2563eb', '#ffffff', '#dc2626'];
+      default: // 'academic'
+        return ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026'];
+    }
+  };
+
+  const correlationColors = getCorrelationColors(chartConfig.colorScheme, chartConfig.customColors);
+
   return {
     title: titleConfig,
     tooltip: {
@@ -128,7 +152,7 @@ export const generateCorrelationConfig = (
       text: ['High', 'Low'],
       dimension: 2,
       inRange: {
-        color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+        color: correlationColors
       }
     },
     series: [{
