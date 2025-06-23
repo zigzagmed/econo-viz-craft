@@ -28,7 +28,7 @@ export const ChartTypeSelectionCard: React.FC<ChartTypeSelectionCardProps> = ({
       bar: { name: 'Bar Chart', icon: BarChart, description: 'Compare categories or values' },
       line: { name: 'Line Chart', icon: LineChart, description: 'Show trends over time' },
       pie: { name: 'Pie Chart', icon: PieChart, description: 'Show proportions' },
-      scatter: { name: 'Scatter Plot', icon: ScatterChart, description: 'Show relationships with optional trend line' },
+      scatter: { name: 'Scatter Plot', icon: ScatterChart, description: 'Show relationships between variables' },
       histogram: { name: 'Histogram', icon: BarChart, description: 'Show distribution' },
       boxplot: { name: 'Box Plot', icon: BarChart, description: 'Show quartiles and outliers' },
       correlation: { name: 'Correlation Matrix', icon: BarChart, description: 'Variable correlations' },

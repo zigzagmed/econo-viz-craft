@@ -23,23 +23,45 @@ export const generateCorrelationConfig = (
   if (!variableRoles.variables || variableRoles.variables.length < 2) return {};
   
   const variables = variableRoles.variables;
-  const correlationMatrix = variables.map((var1, i) => 
-    variables.map((var2, j) => {
-      if (i === j) return [j, i, 1];
-      const values1 = data.map(d => d[var1]).filter(v => v != null && !isNaN(v));
-      const values2 = data.map(d => d[var2]).filter(v => v != null && !isNaN(v));
-      
-      const correlation = calculateCorrelation(values1, values2);
-      return [j, i, correlation];
-    })
-  ).flat();
+  
+  // Create correlation matrix data
+  const correlationMatrix = [];
+  for (let i = 0; i < variables.length; i++) {
+    for (let j = 0; j < variables.length; j++) {
+      if (i === j) {
+        correlationMatrix.push([j, i, 1]);
+      } else {
+        // Get values for both variables, ensuring we have the same data points
+        const pairedData = data
+          .map(d => ({ x: d[variables[i]], y: d[variables[j]] }))
+          .filter(pair => 
+            pair.x != null && 
+            pair.y != null && 
+            !isNaN(Number(pair.x)) && 
+            !isNaN(Number(pair.y))
+          );
+        
+        if (pairedData.length < 2) {
+          correlationMatrix.push([j, i, 0]);
+        } else {
+          const values1 = pairedData.map(pair => Number(pair.x));
+          const values2 = pairedData.map(pair => Number(pair.y));
+          
+          const correlation = calculateCorrelation(values1, values2);
+          correlationMatrix.push([j, i, correlation]);
+        }
+      }
+    }
+  }
 
   return {
     title: titleConfig,
     tooltip: {
       position: 'top',
       formatter: (params: any) => {
-        return `${variables[params.data[0]]} vs ${variables[params.data[1]]}<br/>Correlation: ${formatTooltipValue(params.data[2])}`;
+        const corr = params.data[2];
+        const formattedCorr = isNaN(corr) ? '0.00' : corr.toFixed(3);
+        return `${variables[params.data[0]]} vs ${variables[params.data[1]]}<br/>Correlation: ${formattedCorr}`;
       }
     },
     grid: {
@@ -89,7 +111,10 @@ export const generateCorrelationConfig = (
       label: {
         show: true,
         fontSize: 12,
-        formatter: (params: any) => formatTooltipValue(params.data[2])
+        formatter: (params: any) => {
+          const corr = params.data[2];
+          return isNaN(corr) ? '0.00' : corr.toFixed(2);
+        }
       },
       itemStyle: {
         borderWidth: 1,
