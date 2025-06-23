@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -27,6 +26,42 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
   
   if (statEntries.length === 0) {
     return null;
+  }
+
+  // Check if this looks like bar chart statistics (simple group -> value mapping)
+  const hasSimpleGrouping = statEntries.every(([key]) => 
+    !key.includes('(') && !key.includes('-') && !key.toLowerCase().includes('correlation') &&
+    !key.toLowerCase().includes('slope') && !key.toLowerCase().includes('intercept') &&
+    !key.toLowerCase().includes('r²')
+  );
+
+  // For simple grouping (like bar charts), use two-column layout
+  if (hasSimpleGrouping) {
+    return (
+      <Card className="mt-4 w-full">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Chart Statistics</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-medium">Group</TableHead>
+                <TableHead className="font-medium text-right">Value</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {statEntries.map(([statName, statData]) => (
+                <TableRow key={statName}>
+                  <TableCell className="font-medium">{statName}</TableCell>
+                  <TableCell className="text-right">{formatValue(statData.value)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    );
   }
 
   // Check for grouped statistics patterns like "Group (Statistic)" or "Group - Statistic"
