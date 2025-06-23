@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -42,20 +43,20 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Chart Statistics</CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 flex justify-center">
+        <CardContent className="pt-0">
           <div className="w-auto max-w-md">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="font-medium text-center w-32">Group</TableHead>
-                  <TableHead className="font-medium text-center w-32">Value</TableHead>
+                  <TableHead className="font-medium w-32">Group</TableHead>
+                  <TableHead className="font-medium w-32">Value</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {statEntries.map(([statName, statData]) => (
                   <TableRow key={statName}>
-                    <TableCell className="font-medium text-center">{statName}</TableCell>
-                    <TableCell className="text-center">{formatValue(statData.value)}</TableCell>
+                    <TableCell className="font-medium">{statName}</TableCell>
+                    <TableCell>{formatValue(statData.value)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
