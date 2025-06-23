@@ -123,7 +123,7 @@ export const SmartChartTypeSelector: React.FC<SmartChartTypeSelectorProps> = ({
     const allCharts = [
       { id: 'bar', name: 'Bar Chart', icon: BarChart, description: 'Compare categories or values' },
       { id: 'line', name: 'Line Chart', icon: LineChart, description: 'Show trends over time' },
-      { id: 'scatter', name: 'Scatter Plot', icon: ScatterChart, description: 'Show relationships with optional trend line' },
+      { id: 'scatter', name: 'Scatter Plot', icon: ScatterChart, description: 'Show relationships between variables' },
       { id: 'pie', name: 'Pie Chart', icon: PieChart, description: 'Show proportions' },
       { id: 'histogram', name: 'Histogram', icon: BarChart, description: 'Show distribution' },
       { id: 'boxplot', name: 'Box Plot', icon: BarChart, description: 'Show quartiles' },
