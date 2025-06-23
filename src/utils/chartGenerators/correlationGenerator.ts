@@ -24,35 +24,55 @@ export const generateCorrelationConfig = (
   
   const variables = variableRoles.variables;
   
+  console.log('Correlation matrix data:', data.slice(0, 3));
+  console.log('Variables for correlation:', variables);
+  
   // Create correlation matrix data
   const correlationMatrix = [];
   for (let i = 0; i < variables.length; i++) {
     for (let j = 0; j < variables.length; j++) {
       if (i === j) {
-        correlationMatrix.push([j, i, 1]);
+        correlationMatrix.push([j, i, 1.0]);
       } else {
         // Get values for both variables, ensuring we have the same data points
         const pairedData = data
-          .map(d => ({ x: d[variables[i]], y: d[variables[j]] }))
-          .filter(pair => 
-            pair.x != null && 
-            pair.y != null && 
-            !isNaN(Number(pair.x)) && 
-            !isNaN(Number(pair.y))
-          );
+          .map(d => {
+            const xVal = d[variables[i]];
+            const yVal = d[variables[j]];
+            return { x: xVal, y: yVal };
+          })
+          .filter(pair => {
+            const xNum = Number(pair.x);
+            const yNum = Number(pair.y);
+            return pair.x != null && 
+                   pair.y != null && 
+                   !isNaN(xNum) && 
+                   !isNaN(yNum) &&
+                   isFinite(xNum) &&
+                   isFinite(yNum);
+          });
+        
+        console.log(`Paired data for ${variables[i]} vs ${variables[j]}:`, pairedData.length, 'points');
         
         if (pairedData.length < 2) {
-          correlationMatrix.push([j, i, 0]);
+          correlationMatrix.push([j, i, 0.0]);
         } else {
           const values1 = pairedData.map(pair => Number(pair.x));
           const values2 = pairedData.map(pair => Number(pair.y));
           
+          console.log(`Values1 sample:`, values1.slice(0, 5));
+          console.log(`Values2 sample:`, values2.slice(0, 5));
+          
           const correlation = calculateCorrelation(values1, values2);
+          console.log(`Calculated correlation for ${variables[i]} vs ${variables[j]}:`, correlation);
+          
           correlationMatrix.push([j, i, correlation]);
         }
       }
     }
   }
+
+  console.log('Final correlation matrix:', correlationMatrix);
 
   return {
     title: titleConfig,
@@ -60,7 +80,7 @@ export const generateCorrelationConfig = (
       position: 'top',
       formatter: (params: any) => {
         const corr = params.data[2];
-        const formattedCorr = isNaN(corr) ? '0.00' : corr.toFixed(3);
+        const formattedCorr = (typeof corr === 'number' && isFinite(corr)) ? corr.toFixed(3) : '0.000';
         return `${variables[params.data[0]]} vs ${variables[params.data[1]]}<br/>Correlation: ${formattedCorr}`;
       }
     },
@@ -113,7 +133,8 @@ export const generateCorrelationConfig = (
         fontSize: 12,
         formatter: (params: any) => {
           const corr = params.data[2];
-          return isNaN(corr) ? '0.00' : corr.toFixed(2);
+          if (typeof corr !== 'number' || !isFinite(corr)) return '0.00';
+          return corr.toFixed(2);
         }
       },
       itemStyle: {
