@@ -100,8 +100,8 @@ export const generateScatterConfig = (
       legend: {
         data: series.map(s => s.name),
         left: 'left',
-        bottom: 10,
-        orient: 'horizontal'
+        top: 'middle',
+        orient: 'vertical'
       },
       xAxis: {
         type: 'value',
@@ -156,8 +156,8 @@ export const generateScatterConfig = (
       legend: showTrendLine && scatterData.length > 1 ? {
         data: ['Data Points', 'Trend Line'],
         left: 'left',
-        bottom: 10,
-        orient: 'horizontal'
+        top: 'middle',
+        orient: 'vertical'
       } : undefined
     };
   }
