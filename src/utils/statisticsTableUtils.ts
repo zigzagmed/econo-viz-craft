@@ -1,8 +1,5 @@
 
-export interface StatEntry {
-  key: string;
-  data: { value: number | string };
-}
+export type StatEntry = [string, { value: number | string }];
 
 export interface GroupedData {
   [group: string]: Record<string, number | string>;
