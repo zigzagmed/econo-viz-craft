@@ -1,7 +1,30 @@
-
 import { useState, useEffect } from 'react';
 
-// Sample econometric datasets
+// =============================================================================
+// PYTHON BACKEND INTEGRATION GUIDE
+// =============================================================================
+// 
+// To integrate with your Python backend:
+// 
+// 1. REMOVE the sampleDatasets object below and replace with API calls
+// 2. UPDATE the useChartingData hook to fetch from your Python endpoints
+// 3. EXPECTED Python API endpoints:
+//    - GET /api/datasets - List available datasets
+//    - GET /api/datasets/{id}/info - Get dataset metadata (variables, types, etc.)
+//    - POST /api/datasets/{id}/data - Get filtered data for selected variables
+// 
+// 4. EXPECTED Python response formats:
+//    - Dataset list: [{ id: str, name: str, description: str, variables: int, observations: int }]
+//    - Dataset info: { variables: [{ name: str, type: 'continuous'|'categorical'|'binary', description: str, missing: int }] }
+//    - Dataset data: [{ variable1: value, variable2: value, ... }] (array of objects)
+//
+// 5. REPLACE the functions below with actual API calls using fetch() or axios
+//
+// =============================================================================
+
+// TODO: REMOVE THIS SECTION - Replace with your Python backend data
+// =============================================================================
+// Sample datasets - REMOVE when integrating with Python backend
 const sampleDatasets = {
   gdp_growth: {
     id: 'gdp_growth',
@@ -35,7 +58,9 @@ const sampleDatasets = {
   }
 };
 
+// TODO: REMOVE THESE FUNCTIONS - Replace with Python backend data
 function generateGDPData() {
+  // ... keep existing code (GDP data generation)
   const data = [];
   for (let i = 0; i < 120; i++) {
     const quarter = `Q${(i % 4) + 1}`;
@@ -61,6 +86,7 @@ function generateGDPData() {
 }
 
 function generateHousingData() {
+  // ... keep existing code (housing data generation)
   const data = [];
   const locations = ['Urban', 'Suburban', 'Rural'];
   
@@ -88,8 +114,34 @@ function generateHousingData() {
   }
   return data;
 }
+// END OF SECTION TO REMOVE
+// =============================================================================
 
 export const useChartingData = () => {
+  // TODO: REPLACE WITH PYTHON BACKEND INTEGRATION
+  // =============================================================================
+  // Current implementation uses static data. Replace with:
+  // 
+  // const [datasets, setDatasets] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState(null);
+  // 
+  // useEffect(() => {
+  //   const fetchDatasets = async () => {
+  //     try {
+  //       const response = await fetch('/api/datasets');
+  //       const data = await response.json();
+  //       setDatasets(data);
+  //     } catch (err) {
+  //       setError(err.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchDatasets();
+  // }, []);
+  // =============================================================================
+
   const [datasets] = useState(() => 
     Object.values(sampleDatasets).map(d => ({
       id: d.id,
@@ -100,12 +152,35 @@ export const useChartingData = () => {
     }))
   );
 
+  // TODO: REPLACE WITH PYTHON BACKEND CALL
+  // =============================================================================
+  // Example Python endpoint: GET /api/datasets/{datasetId}/info
+  // Expected response: { variables: [{ name, type, description, missing }] }
+  // =============================================================================
   const getDatasetInfo = (datasetId: string) => {
+    // REPLACE THIS with:
+    // const response = await fetch(`/api/datasets/${datasetId}/info`);
+    // return await response.json();
+    
     const dataset = sampleDatasets[datasetId as keyof typeof sampleDatasets];
     return dataset ? { variables: dataset.variables } : null;
   };
 
+  // TODO: REPLACE WITH PYTHON BACKEND CALL
+  // =============================================================================
+  // Example Python endpoint: POST /api/datasets/{datasetId}/data
+  // Request body: { variables: ['var1', 'var2', ...] }
+  // Expected response: [{ var1: value, var2: value, ... }, ...]
+  // =============================================================================
   const getVariableData = (datasetId: string, variables: string[]) => {
+    // REPLACE THIS with:
+    // const response = await fetch(`/api/datasets/${datasetId}/data`, {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ variables })
+    // });
+    // return await response.json();
+    
     const dataset = sampleDatasets[datasetId as keyof typeof sampleDatasets];
     if (!dataset) return [];
 
@@ -123,5 +198,9 @@ export const useChartingData = () => {
     getDatasetInfo,
     getVariableData,
     currentData: null
+    // TODO: ADD THESE when integrating with Python backend:
+    // loading,
+    // error,
+    // refetch: () => fetchDatasets()
   };
 };
