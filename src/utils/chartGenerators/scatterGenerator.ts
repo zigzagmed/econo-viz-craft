@@ -1,4 +1,3 @@
-
 import { getColorPalette } from '../colorUtils';
 import { calculateRegression } from '../statisticalUtils';
 
@@ -99,7 +98,7 @@ export const generateScatterConfig = (
       },
       legend: {
         data: series.map(s => s.name),
-        left: 'left',
+        left: 20,
         top: 'middle',
         orient: 'vertical'
       },
@@ -155,7 +154,7 @@ export const generateScatterConfig = (
       series,
       legend: showTrendLine && scatterData.length > 1 ? {
         data: ['Data Points', 'Trend Line'],
-        left: 'left',
+        left: 20,
         top: 'middle',
         orient: 'vertical'
       } : undefined
