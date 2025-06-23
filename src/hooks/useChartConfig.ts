@@ -9,6 +9,7 @@ interface VariableRoles {
   groupBy?: string;
   variables?: string[];
   histogramBins?: number;
+  statistic?: string;
 }
 
 export const useChartConfig = (variableRoles: VariableRoles, chartType: string) => {
@@ -49,6 +50,16 @@ export const useChartConfig = (variableRoles: VariableRoles, chartType: string) 
           yAxisLabel = yVar;
           break;
         case 'bar':
+          // Include statistic in bar chart title
+          const statLabel = roles.statistic ? 
+            roles.statistic.charAt(0).toUpperCase() + roles.statistic.slice(1) : 
+            'Count';
+          title = roles.groupBy ? 
+            `${statLabel} ${yVar} by ${xVar} (grouped by ${formatVariableName(roles.groupBy)})` : 
+            `${statLabel} ${yVar} by ${xVar}`;
+          xAxisLabel = xVar;
+          yAxisLabel = yVar;
+          break;
         case 'line':
           title = roles.groupBy ? `${yVar} by ${xVar} (grouped by ${formatVariableName(roles.groupBy)})` : `${yVar} by ${xVar}`;
           xAxisLabel = xVar;

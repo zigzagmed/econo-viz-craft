@@ -31,7 +31,7 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
 
   // Check for grouped statistics patterns like "Group (Statistic)" or "Group - Statistic"
   const groupedData: Record<string, Record<string, number | string>> = {};
-  const totalStats: Array<[string, { value: number | string }]> = [];
+  const summaryStats: Array<[string, { value: number | string }]> = [];
   
   statEntries.forEach(([key, data]) => {
     // Pattern 1: "Group (Statistic)" format
@@ -54,8 +54,8 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
     } else if (key.toLowerCase().includes('total') || key.toLowerCase().includes('sample size') || 
                key.toLowerCase().includes('correlation') || key.toLowerCase().includes('slope') ||
                key.toLowerCase().includes('intercept') || key.toLowerCase().includes('r²')) {
-      // These are summary/total statistics
-      totalStats.push([key, data]);
+      // These are summary/total statistics - add to summary
+      summaryStats.push([key, data]);
     } else {
       // Simple ungrouped statistic - treat as its own group
       groupedData[key] = { 'Value': data.value };
@@ -71,6 +71,14 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
     groups.forEach(group => {
       Object.keys(groupedData[group]).forEach(stat => allStats.add(stat));
     });
+    
+    // Add summary stats as columns if they exist
+    summaryStats.forEach(([statName]) => {
+      // Clean up the statistic name for column header
+      const cleanStatName = statName.replace(/^Total\s+/i, '').trim();
+      allStats.add(cleanStatName);
+    });
+    
     const statsArray = Array.from(allStats).sort();
 
     return (
@@ -79,51 +87,50 @@ export const StatisticsTable: React.FC<StatisticsTableProps> = ({
           <CardTitle className="text-base">Chart Statistics</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          {/* Main grouped statistics table */}
-          {statsArray.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-medium">Group</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-medium">Group</TableHead>
+                {statsArray.map(stat => (
+                  <TableHead key={stat} className="font-medium text-center">{stat}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {groups.map(group => (
+                <TableRow key={group}>
+                  <TableCell className="font-medium">{group}</TableCell>
                   {statsArray.map(stat => (
-                    <TableHead key={stat} className="font-medium text-center">{stat}</TableHead>
+                    <TableCell key={stat} className="text-center">
+                      {groupedData[group][stat] !== undefined 
+                        ? formatValue(groupedData[group][stat])
+                        : '-'
+                      }
+                    </TableCell>
                   ))}
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {groups.map(group => (
-                  <TableRow key={group}>
-                    <TableCell className="font-medium">{group}</TableCell>
-                    {statsArray.map(stat => (
-                      <TableCell key={stat} className="text-center">
-                        {groupedData[group][stat] !== undefined 
-                          ? formatValue(groupedData[group][stat])
-                          : '-'
-                        }
+              ))}
+              
+              {/* Add summary row if we have summary statistics */}
+              {summaryStats.length > 0 && (
+                <TableRow className="border-t-2 bg-gray-50">
+                  <TableCell className="font-semibold">Total</TableCell>
+                  {statsArray.map(stat => {
+                    // Find matching summary statistic
+                    const summaryMatch = summaryStats.find(([statName]) => 
+                      statName.toLowerCase().includes(stat.toLowerCase()) ||
+                      statName.replace(/^Total\s+/i, '').toLowerCase() === stat.toLowerCase()
+                    );
+                    return (
+                      <TableCell key={stat} className="text-center font-medium">
+                        {summaryMatch ? formatValue(summaryMatch[1].value) : '-'}
                       </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-          
-          {/* Summary statistics below if any */}
-          {totalStats.length > 0 && (
-            <div className="mt-4 pt-4 border-t">
-              <h4 className="text-sm font-medium mb-2">Summary Statistics</h4>
-              <Table>
-                <TableBody>
-                  {totalStats.map(([statName, statData]) => (
-                    <TableRow key={statName}>
-                      <TableCell className="font-medium">{statName}</TableCell>
-                      <TableCell className="text-right">{formatValue(statData.value)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+                    );
+                  })}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     );

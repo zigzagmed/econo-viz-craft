@@ -57,8 +57,21 @@ export const generateBarConfig = (
     }
   });
 
+  // Create enhanced title with statistic
+  const formatVariableName = (variable: string) => 
+    variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  
+  const statLabel = variableRoles.statistic?.charAt(0).toUpperCase() + variableRoles.statistic?.slice(1);
+  const xVar = formatVariableName(variableRoles.xAxis);
+  const yVar = formatVariableName(variableRoles.yAxis);
+  
+  const enhancedTitle = chartConfig.title || `${statLabel} ${yVar} by ${xVar}`;
+
   return {
-    title: titleConfig,
+    title: {
+      ...titleConfig,
+      text: enhancedTitle
+    },
     tooltip: { 
       trigger: 'axis',
       formatter: (params: any) => {
